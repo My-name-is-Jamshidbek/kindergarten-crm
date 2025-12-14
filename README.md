@@ -5,6 +5,79 @@ Bu loyiha — bog‘cha uchun oddiy full-stack Django 5.x + Bootstrap 5 ilovasi.
 - Bolalar
 - Vasiylar
 
+## GitHub’dan klonlash
+
+Repo’ni kompyuteringizga yuklab olish:
+
+```bash
+git clone <REPO_URL>
+cd kindergarten-crm
+```
+
+`<REPO_URL>` o‘rniga GitHub’dagi repo havolasini qo‘ying.
+
+## Lokal ishga tushirish (SQLite)
+
+Quyidagi qadamlar SQLite bilan tez ishga tushirish uchun:
+
+### 1) Virtual muhit (venv) yaratish
+
+macOS/Linux:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Windows (PowerShell):
+
+```bash
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+### 2) Kutubxonalarni o‘rnatish
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3) Muhit sozlamalari (.env)
+
+```bash
+cp .env.example .env
+```
+
+So‘ng `.env` ichida kamida `SECRET_KEY` ni o‘rnating.
+
+### 4) Migratsiyalar
+
+```bash
+python manage.py migrate
+```
+
+### 5) Superadmin (superuser) yaratish
+
+Admin panelga kirish uchun superuser yarating:
+
+```bash
+python manage.py createsuperuser
+```
+
+Kiritgan login/parolingiz bilan `/admin/` ga kira olasiz.
+
+### 6) Demo maʼlumotlar (seeder)
+
+```bash
+python manage.py seed_demo_data
+```
+
+### 7) Serverni ishga tushirish
+
+```bash
+python manage.py runserver
+```
+
 `core` ilovasi CRUD sahifalarini (kirish talab qilinadi) va ommaviy bosh sahifani taqdim etadi.
 
 ## Talablar
@@ -12,24 +85,6 @@ Bu loyiha — bog‘cha uchun oddiy full-stack Django 5.x + Bootstrap 5 ilovasi.
 - Python 3.11+ (ushbu repo 3.11/3.12 bilan ishlaydi)
 - PostgreSQL (ixtiyoriy; SQLite standart holatda ishlaydi)
 
-## Tezkor start (SQLite)
-
-```bash
-cd kindergarten-crm
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-cp .env.example .env
-# .env faylini tahrir qiling va SECRET_KEY ni o‘rnating
-
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py seed_demo_data
-python manage.py runserver
-```
-
-Open:
 Ochish:
 - http://127.0.0.1:8000/ (ommaviy bosh sahifa)
 - http://127.0.0.1:8000/classrooms/ (CRUD; kirish talab qilinadi)
