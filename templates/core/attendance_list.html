@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance · Kindergarten CRM{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h4 mb-1">Attendance</h1>
+      <div class="small text-muted">Date: {{ date }}</div>
+    </div>
+  </div>
+
+  <form class="row g-2 align-items-end mb-3" method="get">
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Date</label>
+      <input class="form-control" type="date" name="date" value="{{ date|date:'Y-m-d' }}" />
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Classroom</label>
+      <select class="form-select" name="classroom">
+        <option value="">All</option>
+        {% for c in classrooms %}
+          <option value="{{ c.id }}" {% if selected_classroom == c.id|stringformat:'s' %}selected{% endif %}>
+            {{ c.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Status</label>
+      <select class="form-select" name="status">
+        <option value="">All</option>
+        {% for value,label in statuses %}
+          <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Search</label>
+      <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Child name" />
+    </div>
+    <div class="col-12">
+      <button class="btn btn-primary" type="submit">Apply</button>
+      <a class="btn btn-outline-secondary" href="{% url 'core:attendance_list' %}">Reset</a>
+    </div>
+  </form>
+
+  <div class="row g-2 mb-3">
+    <div class="col-md-3">
+      <div class="card"><div class="card-body py-2">Present: <strong>{{ count_present }}</strong></div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card"><div class="card-body py-2">Late: <strong>{{ count_late }}</strong></div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card"><div class="card-body py-2">Absent: <strong>{{ count_absent }}</strong></div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card"><div class="card-body py-2">Not marked: <strong>{{ count_not_marked }}</strong></div></div>
+    </div>
+  </div>
+
+  {% if selected_classroom %}
+    <form class="mb-3" method="post" action="{% url 'core:attendance_bulk_mark_present' %}">
+      {% csrf_token %}
+      <input type="hidden" name="date" value="{{ date|date:'Y-m-d' }}" />
+      <input type="hidden" name="classroom" value="{{ selected_classroom }}" />
+      <button class="btn btn-success" type="submit">Bulk mark Present (selected classroom)</button>
+    </form>
+  {% endif %}
+
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Child</th>
+          <th>Classroom</th>
+          <th>Status</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th style="width: 320px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in attendances %}
+          <tr>
+            <td>{{ a.child.last_name }}, {{ a.child.first_name }}</td>
+            <td>{{ a.child.classroom.name }}</td>
+            <td>
+              {% if a.status == 'present' %}
+                <span class="badge text-bg-success">Present</span>
+              {% elif a.status == 'late' %}
+                <span class="badge text-bg-warning">Late</span>
+              {% elif a.status == 'absent' %}
+                <span class="badge text-bg-danger">Absent</span>
+              {% elif a.status == 'half_day' %}
+                <span class="badge text-bg-info">Half-day</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Expected</span>
+              {% endif %}
+            </td>
+            <td>{{ a.check_in_time|default:'—' }}</td>
+            <td>{{ a.check_out_time|default:'—' }}</td>
+            <td class="text-end">
+              <div class="btn-group" role="group">
+                <form method="post" action="{% url 'core:attendance_mark' a.pk 'present' %}">{% csrf_token %}
+                  <button class="btn btn-sm btn-outline-success" type="submit">Present</button>
+                </form>
+                <form method="post" action="{% url 'core:attendance_mark' a.pk 'late' %}">{% csrf_token %}
+                  <button class="btn btn-sm btn-outline-warning" type="submit">Late</button>
+                </form>
+                <form method="post" action="{% url 'core:attendance_mark' a.pk 'absent' %}">{% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Absent</button>
+                </form>
+                <form method="post" action="{% url 'core:attendance_mark' a.pk 'half_day' %}">{% csrf_token %}
+                  <button class="btn btn-sm btn-outline-info" type="submit">Half-day</button>
+                </form>
+              </div>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:attendance_update' a.pk %}">Edit</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-muted">No records.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <nav aria-label="Pagination">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?date={{ date|date:'Y-m-d' }}&classroom={{ selected_classroom }}&status={{ selected_status }}&q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled">
+          <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?date={{ date|date:'Y-m-d' }}&classroom={{ selected_classroom }}&status={{ selected_status }}&q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Next</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}

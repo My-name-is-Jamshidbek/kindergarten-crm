@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+
+{% block title %}Logged out · Kindergarten CRM{% endblock %}
+
+{% block content %}
+  <div class="alert alert-info">You have been logged out.</div>
+  <a class="btn btn-primary" href="{% url 'login' %}">Login again</a>
+{% endblock %}
