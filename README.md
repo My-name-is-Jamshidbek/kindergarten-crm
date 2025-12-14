@@ -1,18 +1,18 @@
-# Kindergarten CRM (Django)
+# Bog‘cha CRM (Django)
 
-A simple full-stack Django 5.x + Bootstrap 5 app to manage:
-- Classrooms
-- Children
-- Guardians
+Bu loyiha — bog‘cha uchun oddiy full-stack Django 5.x + Bootstrap 5 ilovasi. U quyidagilarni boshqarish uchun mo‘ljallangan:
+- Guruhlar
+- Bolalar
+- Vasiylar
 
-`core` provides CRUD screens (login required) and a public home page.
+`core` ilovasi CRUD sahifalarini (kirish talab qilinadi) va ommaviy bosh sahifani taqdim etadi.
 
-## Requirements
+## Talablar
 
-- Python 3.11+ (this repo works with 3.11/3.12)
-- PostgreSQL (optional; SQLite works out of the box)
+- Python 3.11+ (ushbu repo 3.11/3.12 bilan ishlaydi)
+- PostgreSQL (ixtiyoriy; SQLite standart holatda ishlaydi)
 
-## Quick start (SQLite)
+## Tezkor start (SQLite)
 
 ```bash
 cd kindergarten-crm
@@ -21,7 +21,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# edit .env and set SECRET_KEY
+# .env faylini tahrir qiling va SECRET_KEY ni o‘rnating
 
 python manage.py migrate
 python manage.py createsuperuser
@@ -30,60 +30,61 @@ python manage.py runserver
 ```
 
 Open:
-- http://127.0.0.1:8000/ (public home)
-- http://127.0.0.1:8000/classrooms/ (CRUD; login required)
+Ochish:
+- http://127.0.0.1:8000/ (ommaviy bosh sahifa)
+- http://127.0.0.1:8000/classrooms/ (CRUD; kirish talab qilinadi)
 - http://127.0.0.1:8000/admin/ (admin)
 
 ## PostgreSQL
 
-Set `DATABASE_URL` in `.env`, for example:
+`.env` faylida `DATABASE_URL` ni sozlang, masalan:
 
 ```bash
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kindergarten_crm
 ```
 
-Then run:
+So‘ng ishga tushiring:
 
 ```bash
 python manage.py migrate
 python manage.py runserver
 ```
 
-## Auth
+## Avtorizatsiya
 
-This project uses Django’s built-in auth:
-- Login: `/accounts/login/`
-- Logout: `/accounts/logout/`
-- Password reset: `/accounts/password_reset/`
+Ushbu loyiha Django’ning standart autentifikatsiyasidan foydalanadi:
+- Kirish: `/accounts/login/`
+- Chiqish: `/accounts/logout/`
+- Parolni tiklash: `/accounts/password_reset/`
 
-Password reset emails are printed to the console via Django’s console email backend.
+Parolni tiklash xabarlari Django’ning console email backend’i orqali terminal (konsol)ga chiqariladi.
 
-## Notes
+## Eslatmalar
 
-- No secrets are committed. Configure everything via `.env` / environment variables.
-- Static/media are configured for development. For production, serve static files via your web server.
+- Maxfiy ma’lumotlar repoga kiritilmagan. Hammasini `.env` / environment variables orqali sozlang.
+- Static/media sozlamalari development uchun. Production’da static fayllarni web server orqali serve qiling.
 
-## Attendance
+## Davomat
 
-- Attendance list: `/attendance/`
-- Pick a date and optionally filter by classroom/status.
-- If you open a date that has no attendance records yet, the app auto-creates `Expected` records for all **Active** children.
-- Use the row buttons to quickly mark Present/Late/Absent/Half-day, or click **Edit** for check-in/out times, absence reason, and notes.
-- To bulk mark a classroom as Present: select a classroom filter, then use **Bulk mark Present**.
+- Davomat ro‘yxati: `/attendance/`
+- Sanani tanlang va xohlasangiz guruh/holat bo‘yicha filter qiling.
+- Agar tanlangan sanada davomat yozuvlari bo‘lmasa, ilova barcha **Faol** bolalar uchun avtomatik `Expected` (Kutilmoqda) yozuvlarini yaratadi.
+- Qator tugmalari orqali tezda Keldi/Kechikdi/Kelmagan/Yarim kun holatini belgilang yoki **Tahrirlash** orqali kirish/chiqish vaqti, sabab va izohlarni kiriting.
+- Guruhni ommaviy “Keldi” deb belgilash uchun avval guruh filterini tanlang, so‘ng **Bulk mark Present** tugmasidan foydalaning.
 
-## Billing
+## To‘lov
 
-### Monthly billing (simple)
+### Oylik to‘lov (soddalashtirilgan)
 
-- Monthly billing page: `/billing/monthly/`
-- Pick a month (`YYYY-MM`) and optionally filter/search.
-- Like Attendance, opening a month auto-creates rows for all **Active** children.
-- The auto-created row amount uses the child’s assigned tariff amount (or `0` if no tariff).
-- Use **Mark Paid** / **Mark Unpaid** buttons; marking uses only `child id + month`.
+- Oylik to‘lov sahifasi: `/billing/monthly/`
+- Oyni tanlang (`YYYY-MM`) va xohlasangiz filter/qidiruvdan foydalaning.
+- Davomat kabi, oy ochilganda barcha **Faol** bolalar uchun yozuvlar avtomatik yaratiladi.
+- Avtomatik yaratilgan yozuv summasi bolaning biriktirilgan tarifi bo‘yicha olinadi (tarif bo‘lmasa `0`).
+- **Mark Paid** / **Mark Unpaid** tugmalari orqali holatni o‘zgartiring; belgilash faqat `bola id + oy` orqali ishlaydi.
 
-### Tariffs
+### Tariflar
 
-- Manage tariffs: `/tariffs/` (create/edit/delete)
-- Assign a tariff to a child via the child create/edit form.
+- Tariflarni boshqarish: `/tariffs/` (yaratish/tahrirlash/o‘chirish)
+- Bolaga tarif biriktirish: bola qo‘shish/tahrirlash formasi orqali.
 
-The app intentionally uses only the simplified monthly billing workflow (one row per child per month).
+Ilova atayin faqat soddalashtirilgan oylik to‘lov oqimidan foydalanadi (har bir bola + har bir oy uchun bitta yozuv).
