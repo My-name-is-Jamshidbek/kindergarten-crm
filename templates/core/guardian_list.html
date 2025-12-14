@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Guardians · Kindergarten CRM{% endblock %}
+{% block title %}Vasiylar · Kindergarten CRM{% endblock %}
 
 {% block content %}
   <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">Guardians</h1>
-    <a class="btn btn-primary" href="{% url 'core:guardian_create' %}">New guardian</a>
+    <h1 class="h4 mb-0">Vasiylar</h1>
+    <a class="btn btn-primary" href="{% url 'core:guardian_create' %}">Yangi vasiy</a>
   </div>
 
   <div class="table-responsive">
@@ -13,10 +13,10 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Child</th>
-          <th>Phone</th>
+          <th>Bola</th>
+          <th>Telefon</th>
           <th>Email</th>
-          <th>Primary</th>
+          <th>Asosiy</th>
           <th style="width: 180px;"></th>
         </tr>
       </thead>
@@ -29,19 +29,19 @@
             <td>{{ guardian.email }}</td>
             <td>
               {% if guardian.is_primary %}
-                <span class="badge text-bg-primary">Yes</span>
+                <span class="badge text-bg-primary">Ha</span>
               {% else %}
-                <span class="badge text-bg-light">No</span>
+                <span class="badge text-bg-light">Yo‘q</span>
               {% endif %}
             </td>
             <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:guardian_update' guardian.pk %}">Edit</a>
-              <a class="btn btn-sm btn-outline-danger" href="{% url 'core:guardian_delete' guardian.pk %}">Delete</a>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:guardian_update' guardian.pk %}">Tahrirlash</a>
+              <a class="btn btn-sm btn-outline-danger" href="{% url 'core:guardian_delete' guardian.pk %}">O‘chirish</a>
             </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="6" class="text-muted">No guardians found.</td>
+            <td colspan="6" class="text-muted">Vasiylar topilmadi.</td>
           </tr>
         {% endfor %}
       </tbody>
@@ -53,10 +53,10 @@
       <ul class="pagination">
         {% if page_obj.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Oldingi</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          <li class="page-item disabled"><span class="page-link">Oldingi</span></li>
         {% endif %}
 
         <li class="page-item disabled">
@@ -65,10 +65,10 @@
 
         {% if page_obj.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Keyingi</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Next</span></li>
+          <li class="page-item disabled"><span class="page-link">Keyingi</span></li>
         {% endif %}
       </ul>
     </nav>

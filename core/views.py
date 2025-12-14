@@ -40,7 +40,7 @@ class PageTitleMixin:
 			return self.page_title
 		model = getattr(self, "model", None)
 		if model is None:
-			return "Form"
+			return "Forma"
 		return str(model._meta.verbose_name).title()
 
 	def get_context_data(self, **kwargs: object) -> dict[str, object]:
@@ -77,11 +77,11 @@ class ClassroomCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 	form_class = ClassroomForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:classroom_list")
-	page_title = "Create classroom"
+	page_title = "Guruh yaratish"
 
 	def form_valid(self, form: ClassroomForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Classroom created.")
+		messages.success(self.request, "Guruh yaratildi.")
 		return response
 
 
@@ -90,11 +90,11 @@ class ClassroomUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 	form_class = ClassroomForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:classroom_list")
-	page_title = "Edit classroom"
+	page_title = "Guruhni tahrirlash"
 
 	def form_valid(self, form: ClassroomForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Classroom updated.")
+		messages.success(self.request, "Guruh yangilandi.")
 		return response
 
 
@@ -104,7 +104,7 @@ class ClassroomDeleteView(LoginRequiredMixin, DeleteView):
 	success_url = reverse_lazy("core:classroom_list")
 
 	def form_valid(self, form: object) -> HttpResponse:
-		messages.success(self.request, "Classroom deleted.")
+		messages.success(self.request, "Guruh o‘chirildi.")
 		return super().form_valid(form)
 
 
@@ -132,11 +132,11 @@ class ChildCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 	form_class = ChildForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:child_list")
-	page_title = "Register child"
+	page_title = "Bola qo‘shish"
 
 	def form_valid(self, form: ChildForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Child created.")
+		messages.success(self.request, "Bola qo‘shildi.")
 		return response
 
 
@@ -145,11 +145,11 @@ class ChildUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 	form_class = ChildForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:child_list")
-	page_title = "Edit child"
+	page_title = "Bolani tahrirlash"
 
 	def form_valid(self, form: ChildForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Child updated.")
+		messages.success(self.request, "Bola yangilandi.")
 		return response
 
 
@@ -159,7 +159,7 @@ class ChildDeleteView(LoginRequiredMixin, DeleteView):
 	success_url = reverse_lazy("core:child_list")
 
 	def form_valid(self, form: object) -> HttpResponse:
-		messages.success(self.request, "Child deleted.")
+		messages.success(self.request, "Bola o‘chirildi.")
 		return super().form_valid(form)
 
 
@@ -180,11 +180,11 @@ class GuardianCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 	form_class = GuardianForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:guardian_list")
-	page_title = "Add guardian"
+	page_title = "Vasiy qo‘shish"
 
 	def form_valid(self, form: GuardianForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Guardian created.")
+		messages.success(self.request, "Vasiy qo‘shildi.")
 		return response
 
 
@@ -193,11 +193,11 @@ class GuardianUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 	form_class = GuardianForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:guardian_list")
-	page_title = "Edit guardian"
+	page_title = "Vasiyni tahrirlash"
 
 	def form_valid(self, form: GuardianForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Guardian updated.")
+		messages.success(self.request, "Vasiy yangilandi.")
 		return response
 
 
@@ -207,7 +207,7 @@ class GuardianDeleteView(LoginRequiredMixin, DeleteView):
 	success_url = reverse_lazy("core:guardian_list")
 
 	def form_valid(self, form: object) -> HttpResponse:
-		messages.success(self.request, "Guardian deleted.")
+		messages.success(self.request, "Vasiy o‘chirildi.")
 		return super().form_valid(form)
 
 
@@ -235,11 +235,11 @@ class TariffCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 	form_class = TariffForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:tariff_list")
-	page_title = "Create tariff"
+	page_title = "Tarif yaratish"
 
 	def form_valid(self, form: TariffForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Tariff created.")
+		messages.success(self.request, "Tarif yaratildi.")
 		return response
 
 
@@ -248,11 +248,11 @@ class TariffUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 	form_class = TariffForm
 	template_name = "core/form.html"
 	success_url = reverse_lazy("core:tariff_list")
-	page_title = "Edit tariff"
+	page_title = "Tarifni tahrirlash"
 
 	def form_valid(self, form: TariffForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Tariff updated.")
+		messages.success(self.request, "Tarif yangilandi.")
 		return response
 
 
@@ -262,7 +262,7 @@ class TariffDeleteView(LoginRequiredMixin, DeleteView):
 	success_url = reverse_lazy("core:tariff_list")
 
 	def form_valid(self, form: object) -> HttpResponse:
-		messages.success(self.request, "Tariff deleted.")
+		messages.success(self.request, "Tarif o‘chirildi.")
 		return super().form_valid(form)
 
 
@@ -320,7 +320,7 @@ class AttendanceListView(LoginRequiredMixin, ListView):
 
 	def get_context_data(self, **kwargs: object) -> dict[str, object]:
 		ctx = super().get_context_data(**kwargs)
-		ctx["page_title"] = "Attendance"
+		ctx["page_title"] = "Davomat"
 		ctx["date"] = self.attendance_date
 		ctx["q"] = (self.request.GET.get("q") or "").strip()
 		ctx["classrooms"] = Classroom.objects.all().order_by("name")
@@ -340,7 +340,7 @@ class AttendanceUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 	model = Attendance
 	form_class = AttendanceForm
 	template_name = "core/attendance_form.html"
-	page_title = "Edit attendance"
+	page_title = "Davomatni tahrirlash"
 
 	def get_success_url(self) -> str:
 		date_str = self.object.attendance_date.strftime("%Y-%m-%d")
@@ -348,7 +348,7 @@ class AttendanceUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 
 	def form_valid(self, form: AttendanceForm) -> HttpResponse:
 		response = super().form_valid(form)
-		messages.success(self.request, "Attendance updated.")
+		messages.success(self.request, "Davomat yangilandi.")
 		return response
 
 
@@ -363,15 +363,15 @@ class AttendanceQuickMarkView(LoginRequiredMixin, View):
 
 	def post(self, request: HttpRequest, pk: int, status: str) -> HttpResponse:
 		if status not in self.allowed:
-			return HttpResponseBadRequest("Invalid status")
+			return HttpResponseBadRequest("Noto‘g‘ri holat")
 		try:
 			attendance = Attendance.objects.select_related("child").get(pk=pk)
 		except Attendance.DoesNotExist:
-			return HttpResponseBadRequest("Attendance not found")
+			return HttpResponseBadRequest("Davomat topilmadi")
 
 		attendance.status = status
 		attendance.save(update_fields=["status", "updated_at"])
-		messages.success(request, f"Marked {attendance.child} as {attendance.get_status_display()}.")
+		messages.success(request, f"{attendance.child} holati: {attendance.get_status_display()}.")
 
 		date_str = attendance.attendance_date.strftime("%Y-%m-%d")
 		return_url = request.META.get("HTTP_REFERER") or f"{reverse_lazy('core:attendance_list')}?date={date_str}"
@@ -381,19 +381,19 @@ class AttendanceQuickMarkView(LoginRequiredMixin, View):
 class AttendanceSetTimeView(LoginRequiredMixin, View):
 	def post(self, request: HttpRequest, pk: int, field: str) -> HttpResponse:
 		if field not in {"check_in_time", "check_out_time"}:
-			return HttpResponseBadRequest("Invalid field")
+			return HttpResponseBadRequest("Noto‘g‘ri maydon")
 		value = (request.POST.get("time") or "").strip()
 		if not value:
-			return HttpResponseBadRequest("Missing time")
+			return HttpResponseBadRequest("Vaqt kiritilmadi")
 		try:
 			time_value = datetime.strptime(value, "%H:%M").time()
 		except ValueError:
-			return HttpResponseBadRequest("Invalid time")
+			return HttpResponseBadRequest("Noto‘g‘ri vaqt")
 
 		attendance = Attendance.objects.get(pk=pk)
 		setattr(attendance, field, time_value)
 		attendance.save(update_fields=[field, "updated_at"])
-		messages.success(request, "Time updated.")
+		messages.success(request, "Vaqt yangilandi.")
 		date_str = attendance.attendance_date.strftime("%Y-%m-%d")
 		return_url = request.META.get("HTTP_REFERER") or f"{reverse_lazy('core:attendance_list')}?date={date_str}"
 		return HttpResponseRedirect(return_url)
@@ -404,11 +404,11 @@ class AttendanceBulkMarkPresentView(LoginRequiredMixin, View):
 		date_val = _parse_date(request.POST.get("date"))
 		classroom_id = (request.POST.get("classroom") or "").strip()
 		if not classroom_id:
-			return HttpResponseBadRequest("Missing classroom")
+			return HttpResponseBadRequest("Guruh tanlanmadi")
 
 		children = Child.objects.filter(status=ChildStatus.ACTIVE, classroom_id=classroom_id)
 		if not children.exists():
-			messages.info(request, "No active children in that classroom.")
+			messages.info(request, "Tanlangan guruhda faol bolalar yo‘q.")
 			return HttpResponseRedirect(
 				f"{reverse_lazy('core:attendance_list')}?date={date_val.strftime('%Y-%m-%d')}&classroom={classroom_id}"
 			)
@@ -424,7 +424,7 @@ class AttendanceBulkMarkPresentView(LoginRequiredMixin, View):
 		Attendance.objects.filter(attendance_date=date_val, child__in=children).update(
 			status=AttendanceStatus.PRESENT
 		)
-		messages.success(request, "Marked classroom as present.")
+		messages.success(request, "Tanlangan guruh 'Keldi' deb belgilandi.")
 		return HttpResponseRedirect(
 			f"{reverse_lazy('core:attendance_list')}?date={date_val.strftime('%Y-%m-%d')}&classroom={classroom_id}"
 		)
@@ -500,7 +500,7 @@ class MonthlyBillingListView(LoginRequiredMixin, ListView):
 
 	def get_context_data(self, **kwargs: object) -> dict[str, object]:
 		ctx = super().get_context_data(**kwargs)
-		ctx["page_title"] = "Monthly billing"
+		ctx["page_title"] = "Oylik to‘lov"
 		ctx["month"] = self.billing_month
 		ctx["q"] = (self.request.GET.get("q") or "").strip()
 		ctx["classrooms"] = Classroom.objects.all().order_by("name")
@@ -517,11 +517,11 @@ class MonthlyBillingListView(LoginRequiredMixin, ListView):
 class MonthlyBillingMarkView(LoginRequiredMixin, View):
 	def post(self, request: HttpRequest, status: str) -> HttpResponse:
 		if status not in {MonthlyBillingStatus.PAID, MonthlyBillingStatus.UNPAID}:
-			return HttpResponseBadRequest("Invalid status")
+			return HttpResponseBadRequest("Noto‘g‘ri holat")
 		child_id = (request.POST.get("child") or "").strip()
 		month = _parse_billing_month(request.POST.get("month"))
 		if not child_id:
-			return HttpResponseBadRequest("Missing child")
+			return HttpResponseBadRequest("Bola tanlanmadi")
 		child = get_object_or_404(Child.objects.select_related("tariff"), pk=child_id)
 		default_amount = child.tariff.amount if child.tariff else Decimal("0")
 		row, _ = MonthlyBilling.objects.get_or_create(
@@ -531,10 +531,10 @@ class MonthlyBillingMarkView(LoginRequiredMixin, View):
 		)
 		if status == MonthlyBillingStatus.PAID:
 			row.mark_paid()
-			messages.success(request, "Marked as paid.")
+			messages.success(request, "To‘langan deb belgilandi.")
 		else:
 			row.mark_unpaid()
-			messages.success(request, "Marked as unpaid.")
+			messages.success(request, "To‘lanmagan deb belgilandi.")
 
 		return_url = request.META.get("HTTP_REFERER") or f"{reverse('core:billing_monthly_list')}?month={month}"
 		return HttpResponseRedirect(return_url)

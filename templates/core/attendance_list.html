@@ -1,24 +1,25 @@
 {% extends 'base.html' %}
 
-{% block title %}Attendance · Kindergarten CRM{% endblock %}
+{% block title %}Davomat · Kindergarten CRM{% endblock %}
 
 {% block content %}
   <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
     <div>
       <h1 class="h4 mb-1">Attendance</h1>
-      <div class="small text-muted">Date: {{ date }}</div>
+      <h1 class="h4 mb-1">Davomat</h1>
+      <div class="small text-muted">Sana: {{ date }}</div>
     </div>
   </div>
 
   <form class="row g-2 align-items-end mb-3" method="get">
     <div class="col-sm-6 col-md-3">
-      <label class="form-label">Date</label>
+      <label class="form-label">Sana</label>
       <input class="form-control" type="date" name="date" value="{{ date|date:'Y-m-d' }}" />
     </div>
     <div class="col-sm-6 col-md-3">
-      <label class="form-label">Classroom</label>
+      <label class="form-label">Guruh</label>
       <select class="form-select" name="classroom">
-        <option value="">All</option>
+        <option value="">Barchasi</option>
         {% for c in classrooms %}
           <option value="{{ c.id }}" {% if selected_classroom == c.id|stringformat:'s' %}selected{% endif %}>
             {{ c.name }}
@@ -27,36 +28,36 @@
       </select>
     </div>
     <div class="col-sm-6 col-md-3">
-      <label class="form-label">Status</label>
+      <label class="form-label">Holat</label>
       <select class="form-select" name="status">
-        <option value="">All</option>
+        <option value="">Barchasi</option>
         {% for value,label in statuses %}
           <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="col-sm-6 col-md-3">
-      <label class="form-label">Search</label>
-      <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Child name" />
+      <label class="form-label">Qidirish</label>
+      <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Bola ismi" />
     </div>
     <div class="col-12">
-      <button class="btn btn-primary" type="submit">Apply</button>
-      <a class="btn btn-outline-secondary" href="{% url 'core:attendance_list' %}">Reset</a>
+      <button class="btn btn-primary" type="submit">Qo‘llash</button>
+      <a class="btn btn-outline-secondary" href="{% url 'core:attendance_list' %}">Tozalash</a>
     </div>
   </form>
 
   <div class="row g-2 mb-3">
     <div class="col-md-3">
-      <div class="card"><div class="card-body py-2">Present: <strong>{{ count_present }}</strong></div></div>
+      <div class="card"><div class="card-body py-2">Keldi: <strong>{{ count_present }}</strong></div></div>
     </div>
     <div class="col-md-3">
-      <div class="card"><div class="card-body py-2">Late: <strong>{{ count_late }}</strong></div></div>
+      <div class="card"><div class="card-body py-2">Kechikdi: <strong>{{ count_late }}</strong></div></div>
     </div>
     <div class="col-md-3">
-      <div class="card"><div class="card-body py-2">Absent: <strong>{{ count_absent }}</strong></div></div>
+      <div class="card"><div class="card-body py-2">Kelmagan: <strong>{{ count_absent }}</strong></div></div>
     </div>
     <div class="col-md-3">
-      <div class="card"><div class="card-body py-2">Not marked: <strong>{{ count_not_marked }}</strong></div></div>
+      <div class="card"><div class="card-body py-2">Belgilanmagan: <strong>{{ count_not_marked }}</strong></div></div>
     </div>
   </div>
 
@@ -65,7 +66,7 @@
       {% csrf_token %}
       <input type="hidden" name="date" value="{{ date|date:'Y-m-d' }}" />
       <input type="hidden" name="classroom" value="{{ selected_classroom }}" />
-      <button class="btn btn-success" type="submit">Bulk mark Present (selected classroom)</button>
+      <button class="btn btn-success" type="submit">Tanlangan guruhni “Keldi” deb belgilash</button>
     </form>
   {% endif %}
 
@@ -74,10 +75,10 @@
       <thead>
         <tr>
           <th>Child</th>
-          <th>Classroom</th>
-          <th>Status</th>
-          <th>Check-in</th>
-          <th>Check-out</th>
+          <th>Guruh</th>
+          <th>Holat</th>
+          <th>Kirish vaqti</th>
+          <th>Chiqish vaqti</th>
           <th style="width: 320px;"></th>
         </tr>
       </thead>
@@ -88,15 +89,15 @@
             <td>{{ a.child.classroom.name }}</td>
             <td>
               {% if a.status == 'present' %}
-                <span class="badge text-bg-success">Present</span>
+                <span class="badge text-bg-success">Keldi</span>
               {% elif a.status == 'late' %}
-                <span class="badge text-bg-warning">Late</span>
+                <span class="badge text-bg-warning">Kechikdi</span>
               {% elif a.status == 'absent' %}
-                <span class="badge text-bg-danger">Absent</span>
+                <span class="badge text-bg-danger">Kelmagan</span>
               {% elif a.status == 'half_day' %}
-                <span class="badge text-bg-info">Half-day</span>
+                <span class="badge text-bg-info">Yarim kun</span>
               {% else %}
-                <span class="badge text-bg-secondary">Expected</span>
+                <span class="badge text-bg-secondary">Kutilmoqda</span>
               {% endif %}
             </td>
             <td>{{ a.check_in_time|default:'—' }}</td>
@@ -104,23 +105,23 @@
             <td class="text-end">
               <div class="btn-group" role="group">
                 <form method="post" action="{% url 'core:attendance_mark' a.pk 'present' %}">{% csrf_token %}
-                  <button class="btn btn-sm btn-outline-success" type="submit">Present</button>
+                  <button class="btn btn-sm btn-outline-success" type="submit">Keldi</button>
                 </form>
                 <form method="post" action="{% url 'core:attendance_mark' a.pk 'late' %}">{% csrf_token %}
-                  <button class="btn btn-sm btn-outline-warning" type="submit">Late</button>
+                  <button class="btn btn-sm btn-outline-warning" type="submit">Kechikdi</button>
                 </form>
                 <form method="post" action="{% url 'core:attendance_mark' a.pk 'absent' %}">{% csrf_token %}
-                  <button class="btn btn-sm btn-outline-danger" type="submit">Absent</button>
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Kelmagan</button>
                 </form>
                 <form method="post" action="{% url 'core:attendance_mark' a.pk 'half_day' %}">{% csrf_token %}
-                  <button class="btn btn-sm btn-outline-info" type="submit">Half-day</button>
+                  <button class="btn btn-sm btn-outline-info" type="submit">Yarim kun</button>
                 </form>
               </div>
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:attendance_update' a.pk %}">Edit</a>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:attendance_update' a.pk %}">Tahrirlash</a>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="6" class="text-muted">No records.</td></tr>
+          <tr><td colspan="6" class="text-muted">Ma’lumot yo‘q.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -131,10 +132,10 @@
       <ul class="pagination">
         {% if page_obj.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?date={{ date|date:'Y-m-d' }}&classroom={{ selected_classroom }}&status={{ selected_status }}&q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a>
+            <a class="page-link" href="?date={{ date|date:'Y-m-d' }}&classroom={{ selected_classroom }}&status={{ selected_status }}&q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Oldingi</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          <li class="page-item disabled"><span class="page-link">Oldingi</span></li>
         {% endif %}
 
         <li class="page-item disabled">
@@ -143,10 +144,10 @@
 
         {% if page_obj.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?date={{ date|date:'Y-m-d' }}&classroom={{ selected_classroom }}&status={{ selected_status }}&q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Next</a>
+            <a class="page-link" href="?date={{ date|date:'Y-m-d' }}&classroom={{ selected_classroom }}&status={{ selected_status }}&q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Keyingi</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Next</span></li>
+          <li class="page-item disabled"><span class="page-link">Keyingi</span></li>
         {% endif %}
       </ul>
     </nav>

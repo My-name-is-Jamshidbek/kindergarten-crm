@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Tariffs · Kindergarten CRM{% endblock %}
+{% block title %}Tariflar · Kindergarten CRM{% endblock %}
 
 {% block content %}
   <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">Tariffs</h1>
-    <a class="btn btn-primary" href="{% url 'core:tariff_create' %}">New tariff</a>
+    <h1 class="h4 mb-0">Tariflar</h1>
+    <a class="btn btn-primary" href="{% url 'core:tariff_create' %}">Yangi tarif</a>
   </div>
 
   <form class="row g-2 mb-3" method="get">
@@ -15,13 +15,13 @@
         type="search"
         name="q"
         value="{{ q }}"
-        placeholder="Search by name/description"
-        aria-label="Search"
+        placeholder="Nom/tavsif bo‘yicha qidiring"
+        aria-label="Qidirish"
       />
     </div>
     <div class="col-auto">
-      <button class="btn btn-outline-primary" type="submit">Search</button>
-      <a class="btn btn-outline-secondary" href="{% url 'core:tariff_list' %}">Reset</a>
+      <button class="btn btn-outline-primary" type="submit">Qidirish</button>
+      <a class="btn btn-outline-secondary" href="{% url 'core:tariff_list' %}">Tozalash</a>
     </div>
   </form>
 
@@ -31,7 +31,7 @@
         <tr>
           <th>Name</th>
           <th class="text-end">Amount</th>
-          <th>Active</th>
+          <th>Faol</th>
           <th style="width: 180px;"></th>
         </tr>
       </thead>
@@ -45,19 +45,19 @@
             <td class="text-end">{{ tariff.amount }}</td>
             <td>
               {% if tariff.is_active %}
-                <span class="badge text-bg-success">Active</span>
+                <span class="badge text-bg-success">Faol</span>
               {% else %}
-                <span class="badge text-bg-secondary">Inactive</span>
+                <span class="badge text-bg-secondary">Nofaol</span>
               {% endif %}
             </td>
             <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:tariff_update' tariff.pk %}">Edit</a>
-              <a class="btn btn-sm btn-outline-danger" href="{% url 'core:tariff_delete' tariff.pk %}">Delete</a>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:tariff_update' tariff.pk %}">Tahrirlash</a>
+              <a class="btn btn-sm btn-outline-danger" href="{% url 'core:tariff_delete' tariff.pk %}">O‘chirish</a>
             </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="4" class="text-muted">No tariffs found.</td>
+            <td colspan="4" class="text-muted">Tariflar topilmadi.</td>
           </tr>
         {% endfor %}
       </tbody>
@@ -69,10 +69,10 @@
       <ul class="pagination">
         {% if page_obj.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a>
+            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Oldingi</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          <li class="page-item disabled"><span class="page-link">Oldingi</span></li>
         {% endif %}
 
         <li class="page-item disabled">
@@ -81,10 +81,10 @@
 
         {% if page_obj.has_next %}
           <li class="page-item">
-            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Next</a>
+            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Keyingi</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Next</span></li>
+          <li class="page-item disabled"><span class="page-link">Keyingi</span></li>
         {% endif %}
       </ul>
     </nav>

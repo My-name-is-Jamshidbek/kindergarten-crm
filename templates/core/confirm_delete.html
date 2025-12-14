@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1 class="h4 mb-3">Confirm delete</h1>
+  <h1 class="h4 mb-3">O‘chirishni tasdiqlang</h1>
 
   <div class="alert alert-warning">
-    Are you sure you want to delete <strong>{{ object }}</strong>?
+    <strong>{{ object }}</strong> ni o‘chirmoqchimisiz?
   </div>
 
   <form method="post">
     {% csrf_token %}
     <div class="d-flex gap-2">
-      <button class="btn btn-danger" type="submit">Delete</button>
-      <a class="btn btn-outline-secondary" href="javascript:history.back()">Cancel</a>
+      <button class="btn btn-danger" type="submit">O‘chirish</button>
+      <a class="btn btn-outline-secondary" href="javascript:history.back()">Bekor qilish</a>
     </div>
   </form>
 {% endblock %}

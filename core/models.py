@@ -30,8 +30,8 @@ class Classroom(TimeStampedModel):
 
 
 class ChildStatus(models.TextChoices):
-	ACTIVE = "active", "Active"
-	INACTIVE = "inactive", "Inactive"
+	ACTIVE = "active", "Faol"
+	INACTIVE = "inactive", "Nofaol"
 
 
 class Tariff(TimeStampedModel):
@@ -104,11 +104,11 @@ class Guardian(TimeStampedModel):
 
 
 class AttendanceStatus(models.TextChoices):
-	EXPECTED = "expected", "Expected"
-	PRESENT = "present", "Present"
-	ABSENT = "absent", "Absent"
-	LATE = "late", "Late"
-	HALF_DAY = "half_day", "Half-day"
+	EXPECTED = "expected", "Kutilmoqda"
+	PRESENT = "present", "Keldi"
+	ABSENT = "absent", "Kelmagan"
+	LATE = "late", "Kechikdi"
+	HALF_DAY = "half_day", "Yarim kun"
 
 
 class Attendance(TimeStampedModel):
@@ -169,8 +169,8 @@ def current_billing_month() -> str:
 
 
 class MonthlyBillingStatus(models.TextChoices):
-	UNPAID = "unpaid", "Unpaid"
-	PAID = "paid", "Paid"
+	UNPAID = "unpaid", "To‘lanmagan"
+	PAID = "paid", "To‘langan"
 
 
 class MonthlyBilling(TimeStampedModel):

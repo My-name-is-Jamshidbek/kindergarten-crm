@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}Edit attendance · Kindergarten CRM{% endblock %}
+{% block title %}Davomatni tahrirlash · Kindergarten CRM{% endblock %}
 
 {% block content %}
   <div class="d-flex align-items-center justify-content-between mb-3">
@@ -21,7 +21,7 @@
       <form method="post" novalidate>
         {% csrf_token %}
         {{ form|crispy }}
-        <button class="btn btn-primary" type="submit">Save</button>
+        <button class="btn btn-primary" type="submit">Saqlash</button>
       </form>
     </div>
   </div>

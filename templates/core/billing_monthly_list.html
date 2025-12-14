@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Monthly billing · Kindergarten CRM{% endblock %}
+{% block title %}Oylik to‘lov · Kindergarten CRM{% endblock %}
 
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h1 class="h3 mb-1">Monthly billing</h1>
-      <div class="text-muted">One row per child per month (Paid / Unpaid)</div>
+      <h1 class="h3 mb-1">Oylik to‘lov</h1>
+      <div class="text-muted">Har bir bola uchun har oy 1 qatordan (To‘langan / To‘lanmagan)</div>
     </div>
   </div>
 
@@ -16,7 +17,7 @@
     </div>
     <div class="col-md-3">
       <select class="form-select" name="classroom">
-        <option value="">All classrooms</option>
+        <option value="">Barcha guruhlar</option>
         {% for c in classrooms %}
           <option value="{{ c.pk }}" {% if selected_classroom == c.pk|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
         {% endfor %}
@@ -24,26 +25,26 @@
     </div>
     <div class="col-md-2">
       <select class="form-select" name="status">
-        <option value="">All statuses</option>
+        <option value="">Barcha holatlar</option>
         {% for value,label in statuses %}
           <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="col-md-2">
-      <input class="form-control" name="q" placeholder="Search child" value="{{ q }}" />
+      <input class="form-control" name="q" placeholder="Bola qidirish" value="{{ q }}" />
     </div>
     <div class="col-md-2 d-grid">
-      <button class="btn btn-outline-secondary" type="submit">Apply</button>
+      <button class="btn btn-outline-secondary" type="submit">Qo‘llash</button>
     </div>
   </form>
 
   <div class="row g-3 mb-3">
     <div class="col-md-3">
-      <div class="card"><div class="card-body"><div class="text-muted">Paid</div><div class="h5 mb-0">{{ count_paid }}</div></div></div>
+      <div class="card"><div class="card-body"><div class="text-muted">To‘langan</div><div class="h5 mb-0">{{ count_paid }}</div></div></div>
     </div>
     <div class="col-md-3">
-      <div class="card"><div class="card-body"><div class="text-muted">Unpaid</div><div class="h5 mb-0">{{ count_unpaid }}</div></div></div>
+      <div class="card"><div class="card-body"><div class="text-muted">To‘lanmagan</div><div class="h5 mb-0">{{ count_unpaid }}</div></div></div>
     </div>
   </div>
 
@@ -51,12 +52,12 @@
     <table class="table table-striped align-middle">
       <thead>
         <tr>
-          <th>Child</th>
-          <th>Classroom</th>
-		  <th>Tariff</th>
-		  <th class="text-end">Amount</th>
-          <th>Status</th>
-          <th>Paid at</th>
+          <th>Bola</th>
+          <th>Guruh</th>
+		  <th>Tarif</th>
+		  <th class="text-end">Summa</th>
+          <th>Holat</th>
+          <th>To‘langan vaqti</th>
           <th></th>
         </tr>
       </thead>
@@ -75,19 +76,19 @@
                   {% csrf_token %}
                   <input type="hidden" name="child" value="{{ row.child.pk }}" />
                   <input type="hidden" name="month" value="{{ month }}" />
-                  <button class="btn btn-sm btn-success" type="submit">Mark Paid</button>
+                  <button class="btn btn-sm btn-success" type="submit">To‘langan</button>
                 </form>
                 <form method="post" action="{% url 'core:billing_monthly_mark' 'unpaid' %}">
                   {% csrf_token %}
                   <input type="hidden" name="child" value="{{ row.child.pk }}" />
                   <input type="hidden" name="month" value="{{ month }}" />
-                  <button class="btn btn-sm btn-outline-secondary" type="submit">Mark Unpaid</button>
+                  <button class="btn btn-sm btn-outline-secondary" type="submit">To‘lanmagan</button>
                 </form>
               </div>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="7" class="text-center text-muted py-4">No rows.</td></tr>
+          <tr><td colspan="7" class="text-center text-muted py-4">Qatorlar yo‘q.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -97,17 +98,17 @@
     <nav aria-label="Pagination">
       <ul class="pagination">
         {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?month={{ month|urlencode }}&classroom={{ selected_classroom|urlencode }}&status={{ selected_status|urlencode }}&q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+          <li class="page-item"><a class="page-link" href="?month={{ month|urlencode }}&classroom={{ selected_classroom|urlencode }}&status={{ selected_status|urlencode }}&q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Oldingi</a></li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          <li class="page-item disabled"><span class="page-link">Oldingi</span></li>
         {% endif %}
 
         <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
 
         {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?month={{ month|urlencode }}&classroom={{ selected_classroom|urlencode }}&status={{ selected_status|urlencode }}&q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Next</a></li>
+          <li class="page-item"><a class="page-link" href="?month={{ month|urlencode }}&classroom={{ selected_classroom|urlencode }}&status={{ selected_status|urlencode }}&q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Keyingi</a></li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Next</span></li>
+          <li class="page-item disabled"><span class="page-link">Keyingi</span></li>
         {% endif %}
       </ul>
     </nav>
