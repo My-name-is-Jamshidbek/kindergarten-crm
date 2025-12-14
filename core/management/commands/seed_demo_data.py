@@ -2,12 +2,23 @@ from __future__ import annotations
 
 import random
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from core.models import Attendance, AttendanceStatus, Child, ChildStatus, Classroom, Guardian
+from core.models import (
+    Attendance,
+    AttendanceStatus,
+    Child,
+    ChildStatus,
+    Classroom,
+    Guardian,
+    MonthlyBilling,
+    MonthlyBillingStatus,
+    Tariff,
+)
 
 
 FIRST_NAMES = ["Emma", "Noah", "Olivia", "Liam", "Ava", "Sophia", "Mason", "Mia"]
@@ -29,7 +40,11 @@ class Command(BaseCommand):
 
         classrooms = self._create_classrooms(classrooms_count)
         self._create_children_and_guardians(classrooms, children_count)
+
+        tariffs = self._create_tariffs()
+        self._assign_tariffs_to_children(tariffs)
         self._create_today_attendance()
+        self._create_monthly_billing_seed()
 
         self.stdout.write(self.style.SUCCESS("Demo data created."))
 
@@ -46,6 +61,80 @@ class Command(BaseCommand):
             if was_created:
                 created += 1
         self.stdout.write(self.style.SUCCESS(f"Attendance seeded for today: {created} record(s) created."))
+
+    def _create_monthly_billing_seed(self) -> None:
+        """Create monthly billing rows for the current month."""
+        today = timezone.localdate()
+        billing_month = today.strftime("%Y-%m")
+        active_children = list(
+            Child.objects.filter(status=ChildStatus.ACTIVE).select_related("tariff").prefetch_related("guardians")
+        )
+        if not active_children:
+            self.stdout.write(self.style.WARNING("No active children found; skipping monthly billing seed."))
+            return
+
+        created_rows = 0
+        for child in active_children:
+            default_amount = child.tariff.amount if child.tariff else Decimal(str(random.choice([450, 500, 550, 600])))
+            _, created = MonthlyBilling.objects.get_or_create(
+                child=child,
+                billing_month=billing_month,
+                defaults={"amount": default_amount, "status": MonthlyBillingStatus.UNPAID},
+            )
+            if created:
+                created_rows += 1
+        # Mark a few as paid for demo purposes.
+
+        to_mark = max(1, created_rows // 3)
+        ids = list(
+            MonthlyBilling.objects.filter(billing_month=billing_month)
+            .order_by("id")
+            .values_list("id", flat=True)[:to_mark]
+        )
+        if ids:
+            MonthlyBilling.objects.filter(id__in=ids).update(
+                status=MonthlyBillingStatus.PAID,
+                paid_at=timezone.now(),
+            )
+
+        self.stdout.write(self.style.SUCCESS(f"Monthly billing seeded: {created_rows} row(s) created for {billing_month}."))
+
+    def _create_tariffs(self) -> list[Tariff]:
+        defaults = [
+            ("Standard", Decimal("500.00"), True, "Default monthly kindergarten fee"),
+            ("Discount", Decimal("450.00"), True, "Reduced monthly fee"),
+            ("Premium", Decimal("600.00"), True, "Premium monthly fee"),
+        ]
+        tariffs: list[Tariff] = []
+        for name, amount, is_active, description in defaults:
+            tariff, _ = Tariff.objects.get_or_create(
+                name=name,
+                defaults={"amount": amount, "is_active": is_active, "description": description},
+            )
+            if tariff.amount != amount or tariff.is_active != is_active or tariff.description != description:
+                tariff.amount = amount
+                tariff.is_active = is_active
+                tariff.description = description
+                tariff.save(update_fields=["amount", "is_active", "description", "updated_at"])
+            tariffs.append(tariff)
+        self.stdout.write(self.style.SUCCESS(f"Tariffs seeded: {len(tariffs)} tariff(s)."))
+        return tariffs
+
+    def _assign_tariffs_to_children(self, tariffs: list[Tariff]) -> None:
+        if not tariffs:
+            return
+        active_children = list(Child.objects.filter(status=ChildStatus.ACTIVE))
+        if not active_children:
+            return
+        assigned = 0
+        for child in active_children:
+            if child.tariff_id:
+                continue
+            child.tariff = random.choice(tariffs)
+            child.save(update_fields=["tariff", "updated_at"])
+            assigned += 1
+
+        self.stdout.write(self.style.SUCCESS(f"Assigned tariffs to {assigned} active child(ren) (where missing)."))
 
     def _create_classrooms(self, count: int) -> list[Classroom]:
         defaults = [

@@ -70,3 +70,20 @@ Password reset emails are printed to the console via Django’s console email ba
 - If you open a date that has no attendance records yet, the app auto-creates `Expected` records for all **Active** children.
 - Use the row buttons to quickly mark Present/Late/Absent/Half-day, or click **Edit** for check-in/out times, absence reason, and notes.
 - To bulk mark a classroom as Present: select a classroom filter, then use **Bulk mark Present**.
+
+## Billing
+
+### Monthly billing (simple)
+
+- Monthly billing page: `/billing/monthly/`
+- Pick a month (`YYYY-MM`) and optionally filter/search.
+- Like Attendance, opening a month auto-creates rows for all **Active** children.
+- The auto-created row amount uses the child’s assigned tariff amount (or `0` if no tariff).
+- Use **Mark Paid** / **Mark Unpaid** buttons; marking uses only `child id + month`.
+
+### Tariffs
+
+- Manage tariffs: `/tariffs/` (create/edit/delete)
+- Assign a tariff to a child via the child create/edit form.
+
+The app intentionally uses only the simplified monthly billing workflow (one row per child per month).

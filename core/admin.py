@@ -2,7 +2,22 @@ from __future__ import annotations
 
 from django.contrib import admin
 
-from .models import Attendance, AuthorizedPickup, Child, Classroom, Guardian
+from .models import (
+	Attendance,
+	AuthorizedPickup,
+	Child,
+	Classroom,
+	Guardian,
+	Tariff,
+	MonthlyBilling,
+)
+
+
+@admin.register(Tariff)
+class TariffAdmin(admin.ModelAdmin):
+	list_display = ("name", "amount", "is_active", "created_at", "updated_at")
+	search_fields = ("name", "description")
+	list_filter = ("is_active",)
 
 
 @admin.register(Classroom)
@@ -19,12 +34,13 @@ class ChildAdmin(admin.ModelAdmin):
 		"last_name",
 		"birth_date",
 		"classroom",
+		"tariff",
 		"status",
 		"created_at",
 		"updated_at",
 	)
 	search_fields = ("first_name", "last_name")
-	list_filter = ("status", "classroom")
+	list_filter = ("status", "classroom", "tariff")
 
 
 @admin.register(Guardian)
@@ -70,5 +86,20 @@ class AuthorizedPickupAdmin(admin.ModelAdmin):
 	)
 	search_fields = ("full_name", "phone", "id_document_number", "child__first_name", "child__last_name")
 	list_filter = ("is_active", "relationship")
+
+
+@admin.register(MonthlyBilling)
+class MonthlyBillingAdmin(admin.ModelAdmin):
+	list_display = (
+		"child",
+		"billing_month",
+		"amount",
+		"status",
+		"paid_at",
+		"created_at",
+		"updated_at",
+	)
+	search_fields = ("child__first_name", "child__last_name")
+	list_filter = ("billing_month", "status", "child__classroom", "child__tariff")
 
 # Register your models here.

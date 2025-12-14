@@ -48,6 +48,10 @@ urlpatterns = [
         views.GuardianDeleteView.as_view(),
         name="guardian_delete",
     ),
+	path("tariffs/", views.TariffListView.as_view(), name="tariff_list"),
+	path("tariffs/create/", views.TariffCreateView.as_view(), name="tariff_create"),
+	path("tariffs/<int:pk>/edit/", views.TariffUpdateView.as_view(), name="tariff_update"),
+	path("tariffs/<int:pk>/delete/", views.TariffDeleteView.as_view(), name="tariff_delete"),
     path("attendance/", views.AttendanceListView.as_view(), name="attendance_list"),
     path(
         "attendance/<int:pk>/edit/",
@@ -68,5 +72,13 @@ urlpatterns = [
         "attendance/bulk/mark-present/",
         views.AttendanceBulkMarkPresentView.as_view(),
         name="attendance_bulk_mark_present",
+    ),
+
+    # Billing
+    path("billing/monthly/", views.MonthlyBillingListView.as_view(), name="billing_monthly_list"),
+    path(
+        "billing/monthly/mark/<str:status>/",
+        views.MonthlyBillingMarkView.as_view(),
+        name="billing_monthly_mark",
     ),
 ]

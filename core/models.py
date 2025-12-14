@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from decimal import Decimal
+import re
+from datetime import date
+
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -29,6 +34,19 @@ class ChildStatus(models.TextChoices):
 	INACTIVE = "inactive", "Inactive"
 
 
+class Tariff(TimeStampedModel):
+	name = models.CharField(max_length=120, unique=True)
+	amount = models.DecimalField(max_digits=12, decimal_places=2)
+	is_active = models.BooleanField(default=True)
+	description = models.TextField(blank=True)
+
+	class Meta:
+		ordering = ["-is_active", "name"]
+
+	def __str__(self) -> str:
+		return f"{self.name} ({self.amount})"
+
+
 class Child(TimeStampedModel):
 	first_name = models.CharField(max_length=80)
 	last_name = models.CharField(max_length=80)
@@ -37,6 +55,13 @@ class Child(TimeStampedModel):
 		Classroom,
 		on_delete=models.PROTECT,
 		related_name="children",
+	)
+	tariff = models.ForeignKey(
+		Tariff,
+		on_delete=models.SET_NULL,
+		related_name="children",
+		blank=True,
+		null=True,
 	)
 	status = models.CharField(
 		max_length=10,
@@ -129,5 +154,63 @@ class AuthorizedPickup(TimeStampedModel):
 
 	def __str__(self) -> str:
 		return f"{self.full_name} ({self.child})"
+def _validate_billing_month(value: str | None) -> None:
+	if not value:
+		return
+	if not re.match(r"^\d{4}-\d{2}$", value):
+		raise ValidationError("Billing month must be in YYYY-MM format.")
+	month = int(value[5:7])
+	if month < 1 or month > 12:
+		raise ValidationError("Billing month must be in YYYY-MM format.")
 
-# Create your models here.
+
+def current_billing_month() -> str:
+	return timezone.localdate().strftime("%Y-%m")
+
+
+class MonthlyBillingStatus(models.TextChoices):
+	UNPAID = "unpaid", "Unpaid"
+	PAID = "paid", "Paid"
+
+
+class MonthlyBilling(TimeStampedModel):
+	"""Simplified billing (attendance-style): one row per child per month."""
+	child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="monthly_billing")
+	billing_month = models.CharField(max_length=7, default=current_billing_month, validators=[_validate_billing_month])
+	amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))
+	status = models.CharField(
+		max_length=10,
+		choices=MonthlyBillingStatus.choices,
+		default=MonthlyBillingStatus.UNPAID,
+	)
+	paid_at = models.DateTimeField(blank=True, null=True)
+	notes = models.TextField(blank=True)
+
+	class Meta:
+		ordering = ["-billing_month", "child__last_name", "child__first_name"]
+		constraints = [
+			models.UniqueConstraint(
+				fields=["child", "billing_month"],
+				name="uniq_monthly_billing_child_month",
+			),
+		]
+		indexes = [
+			models.Index(fields=["billing_month", "status"]),
+		]
+
+	def __str__(self) -> str:
+		return f"{self.child} · {self.billing_month}"
+
+	@property
+	def badge_class(self) -> str:
+		return "success" if self.status == MonthlyBillingStatus.PAID else "secondary"
+
+	def mark_paid(self) -> None:
+		self.status = MonthlyBillingStatus.PAID
+		self.paid_at = timezone.now()
+		self.save(update_fields=["status", "paid_at", "updated_at"])
+
+	def mark_unpaid(self) -> None:
+		self.status = MonthlyBillingStatus.UNPAID
+		self.paid_at = None
+		self.save(update_fields=["status", "paid_at", "updated_at"])

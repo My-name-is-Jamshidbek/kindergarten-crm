@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 from datetime import date
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Attendance, AttendanceStatus, Child, ChildStatus, Classroom, Guardian
+from .models import (
+	Attendance,
+	AttendanceStatus,
+	Child,
+	ChildStatus,
+	Classroom,
+	Guardian,
+	MonthlyBilling,
+	MonthlyBillingStatus,
+	Tariff,
+)
 
 
 class ModelSmokeTests(TestCase):
@@ -76,5 +85,56 @@ class AttendanceTests(TestCase):
 		self.assertEqual(resp.status_code, 200)
 		self.assertTrue(Attendance.objects.filter(child=child).exists())
 		self.assertContains(resp, child.last_name)
+
+
+class MonthlyBillingTests(TestCase):
+	def test_list_view_autocreates_rows_for_month(self) -> None:
+		User = get_user_model()
+		user = User.objects.create_user(username="mbuser", password="testpass123")
+
+		classroom = Classroom.objects.create(name="MB", age_group="3-4", capacity=10)
+		tariff = Tariff.objects.create(name="Standard", amount="500.00", is_active=True)
+		child = Child.objects.create(
+			first_name="Ava",
+			last_name="Jones",
+			birth_date=date(2020, 1, 1),
+			classroom=classroom,
+			tariff=tariff,
+			status=ChildStatus.ACTIVE,
+		)
+
+		self.assertEqual(MonthlyBilling.objects.count(), 0)
+		self.client.force_login(user)
+		resp = self.client.get(reverse("core:billing_monthly_list"), {"month": "2025-12"})
+		self.assertEqual(resp.status_code, 200)
+		self.assertTrue(MonthlyBilling.objects.filter(child=child, billing_month="2025-12").exists())
+		row = MonthlyBilling.objects.get(child=child, billing_month="2025-12")
+		self.assertEqual(str(row.amount), "500.00")
+		self.assertContains(resp, child.last_name)
+
+	def test_mark_paid_uses_child_and_month(self) -> None:
+		User = get_user_model()
+		user = User.objects.create_user(username="mbuser2", password="testpass123")
+		classroom = Classroom.objects.create(name="MB2", age_group="3-4", capacity=10)
+		tariff = Tariff.objects.create(name="Premium", amount="600.00", is_active=True)
+		child = Child.objects.create(
+			first_name="Mason",
+			last_name="Smith",
+			birth_date=date(2020, 1, 1),
+			classroom=classroom,
+			tariff=tariff,
+			status=ChildStatus.ACTIVE,
+		)
+
+		self.client.force_login(user)
+		resp = self.client.post(
+			reverse("core:billing_monthly_mark", kwargs={"status": "paid"}),
+			{"child": str(child.pk), "month": "2025-12"},
+		)
+		self.assertEqual(resp.status_code, 302)
+		row = MonthlyBilling.objects.get(child=child, billing_month="2025-12")
+		self.assertEqual(str(row.amount), "600.00")
+		self.assertEqual(row.status, MonthlyBillingStatus.PAID)
+		self.assertIsNotNone(row.paid_at)
 
 # Create your tests here.

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Monthly billing · Kindergarten CRM{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h3 mb-1">Monthly billing</h1>
+      <div class="text-muted">One row per child per month (Paid / Unpaid)</div>
+    </div>
+  </div>
+
+  <form class="row g-2 mb-3" method="get">
+    <div class="col-md-3">
+      <input class="form-control" type="date" name="month" value="{{ month }}-01" />
+    </div>
+    <div class="col-md-3">
+      <select class="form-select" name="classroom">
+        <option value="">All classrooms</option>
+        {% for c in classrooms %}
+          <option value="{{ c.pk }}" {% if selected_classroom == c.pk|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select class="form-select" name="status">
+        <option value="">All statuses</option>
+        {% for value,label in statuses %}
+          <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <input class="form-control" name="q" placeholder="Search child" value="{{ q }}" />
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-outline-secondary" type="submit">Apply</button>
+    </div>
+  </form>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <div class="card"><div class="card-body"><div class="text-muted">Paid</div><div class="h5 mb-0">{{ count_paid }}</div></div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card"><div class="card-body"><div class="text-muted">Unpaid</div><div class="h5 mb-0">{{ count_unpaid }}</div></div></div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Child</th>
+          <th>Classroom</th>
+		  <th>Tariff</th>
+		  <th class="text-end">Amount</th>
+          <th>Status</th>
+          <th>Paid at</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{{ row.child.last_name }}, {{ row.child.first_name }}</td>
+            <td>{{ row.child.classroom.name }}</td>
+			<td>{% if row.child.tariff %}{{ row.child.tariff.name }}{% else %}—{% endif %}</td>
+			<td class="text-end">{% if row.child.tariff %}{{ row.child.tariff.amount }}{% else %}—{% endif %}</td>
+            <td><span class="badge bg-{{ row.badge_class }}">{{ row.get_status_display }}</span></td>
+            <td>{% if row.paid_at %}{{ row.paid_at|date:'Y-m-d H:i' }}{% else %}—{% endif %}</td>
+            <td class="text-end">
+              <div class="d-flex justify-content-end gap-2">
+                <form method="post" action="{% url 'core:billing_monthly_mark' 'paid' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="child" value="{{ row.child.pk }}" />
+                  <input type="hidden" name="month" value="{{ month }}" />
+                  <button class="btn btn-sm btn-success" type="submit">Mark Paid</button>
+                </form>
+                <form method="post" action="{% url 'core:billing_monthly_mark' 'unpaid' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="child" value="{{ row.child.pk }}" />
+                  <input type="hidden" name="month" value="{{ month }}" />
+                  <button class="btn btn-sm btn-outline-secondary" type="submit">Mark Unpaid</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-4">No rows.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <nav aria-label="Pagination">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?month={{ month|urlencode }}&classroom={{ selected_classroom|urlencode }}&status={{ selected_status|urlencode }}&q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?month={{ month|urlencode }}&classroom={{ selected_classroom|urlencode }}&status={{ selected_status|urlencode }}&q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}

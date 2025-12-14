@@ -9,7 +9,14 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Attendance, AttendanceStatus, Child, Classroom, Guardian
+from .models import (
+    Attendance,
+    AttendanceStatus,
+    Child,
+    Classroom,
+    Guardian,
+    Tariff,
+)
 
 
 class ClassroomForm(forms.ModelForm):
@@ -21,7 +28,7 @@ class ClassroomForm(forms.ModelForm):
 class ChildForm(forms.ModelForm):
     class Meta:
         model = Child
-        fields = ["first_name", "last_name", "birth_date", "classroom", "status"]
+        fields = ["first_name", "last_name", "birth_date", "classroom", "tariff", "status"]
         widgets = {
             "birth_date": forms.DateInput(attrs={"type": "date"}),
         }
@@ -104,6 +111,16 @@ class AttendanceForm(forms.ModelForm):
             raise ValidationError({"absence_reason": "Please provide an absence reason."})
 
         return cleaned
+
+
+class TariffForm(forms.ModelForm):
+
+    class Meta:
+        model = Tariff
+        fields = ["name", "amount", "is_active", "description"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
 
 
 @dataclass(frozen=True)

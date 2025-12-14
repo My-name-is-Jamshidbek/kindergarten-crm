@@ -1,28 +1,35 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import models
 from django.db.models import QuerySet
 from datetime import date
 
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
-from django.urls import reverse_lazy
+from datetime import timedelta
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views import View
-from django.views.generic import CreateView, DeleteView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
-from .forms import (
-	AttendanceForm,
-	ChildForm,
-	ClassroomForm,
-	GuardianForm,
-	SearchQuery,
-	child_search_filter,
-	classroom_search_filter,
+from .forms import AttendanceForm, ChildForm, ClassroomForm, GuardianForm, TariffForm, SearchQuery, child_search_filter, classroom_search_filter
+from .models import (
+	Attendance,
+	AttendanceStatus,
+	Child,
+	ChildStatus,
+	Classroom,
+	Guardian,
+	Tariff,
+	MonthlyBilling,
+	MonthlyBillingStatus,
 )
-from .models import Attendance, AttendanceStatus, Child, ChildStatus, Classroom, Guardian
 
 
 class PageTitleMixin:
@@ -204,6 +211,61 @@ class GuardianDeleteView(LoginRequiredMixin, DeleteView):
 		return super().form_valid(form)
 
 
+class TariffListView(LoginRequiredMixin, ListView):
+	model = Tariff
+	template_name = "core/tariff_list.html"
+	context_object_name = "tariffs"
+	paginate_by = 10
+
+	def get_queryset(self) -> QuerySet[Tariff]:
+		qs: QuerySet[Tariff] = Tariff.objects.all().order_by("-is_active", "name")
+		q = (self.request.GET.get("q") or "").strip()
+		if q:
+			qs = qs.filter(models.Q(name__icontains=q) | models.Q(description__icontains=q))
+		return qs
+
+	def get_context_data(self, **kwargs: object) -> dict[str, object]:
+		ctx = super().get_context_data(**kwargs)
+		ctx["q"] = (self.request.GET.get("q") or "").strip()
+		return ctx
+
+
+class TariffCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
+	model = Tariff
+	form_class = TariffForm
+	template_name = "core/form.html"
+	success_url = reverse_lazy("core:tariff_list")
+	page_title = "Create tariff"
+
+	def form_valid(self, form: TariffForm) -> HttpResponse:
+		response = super().form_valid(form)
+		messages.success(self.request, "Tariff created.")
+		return response
+
+
+class TariffUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
+	model = Tariff
+	form_class = TariffForm
+	template_name = "core/form.html"
+	success_url = reverse_lazy("core:tariff_list")
+	page_title = "Edit tariff"
+
+	def form_valid(self, form: TariffForm) -> HttpResponse:
+		response = super().form_valid(form)
+		messages.success(self.request, "Tariff updated.")
+		return response
+
+
+class TariffDeleteView(LoginRequiredMixin, DeleteView):
+	model = Tariff
+	template_name = "core/confirm_delete.html"
+	success_url = reverse_lazy("core:tariff_list")
+
+	def form_valid(self, form: object) -> HttpResponse:
+		messages.success(self.request, "Tariff deleted.")
+		return super().form_valid(form)
+
+
 def _parse_date(value: str | None) -> date:
 	if not value:
 		return timezone.localdate()
@@ -366,5 +428,115 @@ class AttendanceBulkMarkPresentView(LoginRequiredMixin, View):
 		return HttpResponseRedirect(
 			f"{reverse_lazy('core:attendance_list')}?date={date_val.strftime('%Y-%m-%d')}&classroom={classroom_id}"
 		)
+
+
+
+
+def _parse_billing_month(value: str | None) -> str:
+	if not value:
+		return timezone.localdate().strftime("%Y-%m")
+	val = value.strip()
+	# Accept a date picker value (YYYY-MM-DD) and normalize to YYYY-MM.
+	if len(val) == 10 and val[4] == "-" and val[7] == "-":
+		val = val[:7]
+	try:
+		year = int(val[0:4])
+		month = int(val[5:7])
+	except Exception:
+		return timezone.localdate().strftime("%Y-%m")
+	if len(val) != 7 or val[4] != "-" or month < 1 or month > 12 or year < 1900:
+		return timezone.localdate().strftime("%Y-%m")
+	return val
+
+
+class MonthlyBillingListView(LoginRequiredMixin, ListView):
+	model = MonthlyBilling
+	template_name = "core/billing_monthly_list.html"
+	context_object_name = "rows"
+	paginate_by = 25
+
+	def dispatch(self, request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
+		self.billing_month = _parse_billing_month(request.GET.get("month"))
+		return super().dispatch(request, *args, **kwargs)
+
+	def _auto_create_if_missing(self) -> None:
+		active_children = Child.objects.filter(status=ChildStatus.ACTIVE).select_related("tariff")
+		existing = set(
+			MonthlyBilling.objects.filter(billing_month=self.billing_month).values_list("child_id", flat=True)
+		)
+		to_create: list[MonthlyBilling] = []
+		for child in active_children:
+			if child.pk in existing:
+				continue
+			amount = child.tariff.amount if child.tariff else Decimal("0")
+			to_create.append(
+				MonthlyBilling(
+					child=child,
+					billing_month=self.billing_month,
+					amount=amount,
+					status=MonthlyBillingStatus.UNPAID,
+				)
+			)
+		if to_create:
+			MonthlyBilling.objects.bulk_create(to_create, ignore_conflicts=True)
+
+	def get_queryset(self) -> QuerySet[MonthlyBilling]:
+		self._auto_create_if_missing()
+		qs: QuerySet[MonthlyBilling] = MonthlyBilling.objects.select_related(
+			"child", "child__classroom", "child__tariff"
+		).filter(
+			billing_month=self.billing_month
+		)
+		q = (self.request.GET.get("q") or "").strip()
+		if q:
+			qs = qs.filter(child_search_filter(q))
+		classroom_id = (self.request.GET.get("classroom") or "").strip()
+		if classroom_id:
+			qs = qs.filter(child__classroom_id=classroom_id)
+		status = (self.request.GET.get("status") or "").strip()
+		if status:
+			qs = qs.filter(status=status)
+		return qs.order_by("child__last_name", "child__first_name")
+
+	def get_context_data(self, **kwargs: object) -> dict[str, object]:
+		ctx = super().get_context_data(**kwargs)
+		ctx["page_title"] = "Monthly billing"
+		ctx["month"] = self.billing_month
+		ctx["q"] = (self.request.GET.get("q") or "").strip()
+		ctx["classrooms"] = Classroom.objects.all().order_by("name")
+		ctx["selected_classroom"] = (self.request.GET.get("classroom") or "").strip()
+		ctx["selected_status"] = (self.request.GET.get("status") or "").strip()
+		ctx["statuses"] = MonthlyBillingStatus.choices
+
+		base_qs = MonthlyBilling.objects.filter(billing_month=self.billing_month)
+		ctx["count_paid"] = base_qs.filter(status=MonthlyBillingStatus.PAID).count()
+		ctx["count_unpaid"] = base_qs.filter(status=MonthlyBillingStatus.UNPAID).count()
+		return ctx
+
+
+class MonthlyBillingMarkView(LoginRequiredMixin, View):
+	def post(self, request: HttpRequest, status: str) -> HttpResponse:
+		if status not in {MonthlyBillingStatus.PAID, MonthlyBillingStatus.UNPAID}:
+			return HttpResponseBadRequest("Invalid status")
+		child_id = (request.POST.get("child") or "").strip()
+		month = _parse_billing_month(request.POST.get("month"))
+		if not child_id:
+			return HttpResponseBadRequest("Missing child")
+		child = get_object_or_404(Child.objects.select_related("tariff"), pk=child_id)
+		default_amount = child.tariff.amount if child.tariff else Decimal("0")
+		row, _ = MonthlyBilling.objects.get_or_create(
+			child_id=child_id,
+			billing_month=month,
+			defaults={"amount": default_amount, "status": MonthlyBillingStatus.UNPAID},
+		)
+		if status == MonthlyBillingStatus.PAID:
+			row.mark_paid()
+			messages.success(request, "Marked as paid.")
+		else:
+			row.mark_unpaid()
+			messages.success(request, "Marked as unpaid.")
+
+		return_url = request.META.get("HTTP_REFERER") or f"{reverse('core:billing_monthly_list')}?month={month}"
+		return HttpResponseRedirect(return_url)
 
 # Create your views here.
