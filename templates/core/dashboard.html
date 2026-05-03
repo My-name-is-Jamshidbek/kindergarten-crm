@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard · Anvar Bog'cha{% endblock %}
+{% block app_title %}Dashboard{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <div>
+      <div class="page-kicker">{{ current_role_label }}</div>
+      <h1 class="page-title">Dashboard</h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      {% if dashboard_role == 'accountant' %}
+        <a class="btn btn-primary" href="{% url 'core:billing_monthly_list' %}">
+          <i data-lucide="wallet-cards" class="me-1"></i>
+          To'lovlarga o'tish
+        </a>
+      {% else %}
+        <a class="btn btn-primary" href="{% url 'core:attendance_list' %}">
+          <i data-lucide="clipboard-check" class="me-1"></i>
+          Davomatga o'tish
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if dashboard_role == 'accountant' %}
+    <div class="row g-3 mb-3">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="badge-check"></i></span>
+          <div class="text-muted mt-3">To'langan</div>
+          <div class="display-6 fw-bold">{{ billing_stats.paid }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="hourglass"></i></span>
+          <div class="text-muted mt-3">To'lanmagan</div>
+          <div class="display-6 fw-bold">{{ billing_stats.unpaid }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="circle-dollar-sign"></i></span>
+          <div class="text-muted mt-3">To'langan summa</div>
+          <div class="h3 fw-bold">{{ billing_stats.paid_amount }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="receipt"></i></span>
+          <div class="text-muted mt-3">Tariflar</div>
+          <div class="display-6 fw-bold">{{ tariff_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="app-card p-4 h-100">
+          <h2 class="h5">Bugungi ishlar</h2>
+          <p class="text-muted">Joriy oy: {{ billing_stats.month }}. To'lanmagan yozuvlarni ko'rib chiqing va to'lov holatini yangilang.</p>
+          <a class="btn btn-outline-primary" href="{% url 'core:billing_monthly_list' %}">Oylik to'lov</a>
+          <a class="btn btn-outline-secondary" href="{% url 'core:tariff_list' %}">Tariflar</a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="location-panel p-4 h-100">
+          <h2 class="h5">Moliyaviy holat</h2>
+          <p class="mb-1">To'lanmagan summa</p>
+          <div class="display-6 fw-bold">{{ billing_stats.unpaid_amount }}</div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="row g-3 mb-3">
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="check-check"></i></span>
+          <div class="text-muted mt-3">Bugun keldi</div>
+          <div class="display-6 fw-bold">{{ attendance_stats.present }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="clock"></i></span>
+          <div class="text-muted mt-3">Kechikdi</div>
+          <div class="display-6 fw-bold">{{ attendance_stats.late }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="users-round"></i></span>
+          <div class="text-muted mt-3">Faol bolalar</div>
+          <div class="display-6 fw-bold">{{ active_child_count }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="stat-card p-4">
+          <span class="stat-icon"><i data-lucide="contact-round"></i></span>
+          <div class="text-muted mt-3">Vasiylar</div>
+          <div class="display-6 fw-bold">{{ guardian_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-7">
+        <div class="app-card p-4 h-100">
+          <h2 class="h5">Tezkor amallar</h2>
+          <p class="text-muted">Davomatni yangilang yoki vasiylar kontaktlarini tekshiring.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" href="{% url 'core:attendance_list' %}">Davomat</a>
+            <a class="btn btn-outline-secondary" href="{% url 'core:guardian_list' %}">Vasiylar</a>
+            {% if dashboard_role == 'admin' %}
+              <a class="btn btn-outline-secondary" href="{% url 'core:child_list' %}">Bolalar</a>
+              <a class="btn btn-outline-secondary" href="{% url 'core:classroom_list' %}">Guruhlar</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="location-panel p-4 h-100">
+          <h2 class="h5">Bugungi davomat</h2>
+          <p class="mb-1">Kelmagan: <strong>{{ attendance_stats.absent }}</strong></p>
+          <p class="mb-0">Belgilanmagan: <strong>{{ attendance_stats.expected }}</strong></p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if dashboard_role == 'admin' %}
+    <div class="row g-3 mt-1">
+      <div class="col-md-4">
+        <div class="app-card p-4 h-100">
+          <div class="text-muted">Guruhlar</div>
+          <div class="display-6 fw-bold">{{ classroom_count }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="app-card p-4 h-100">
+          <div class="text-muted">Joriy oy to'lanmagan</div>
+          <div class="display-6 fw-bold">{{ billing_stats.unpaid }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="app-card p-4 h-100">
+          <div class="text-muted">Joylashuv</div>
+          <div class="fw-semibold">{% if location.has_coordinates %}Saqlangan{% else %}Kiritilmagan{% endif %}</div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

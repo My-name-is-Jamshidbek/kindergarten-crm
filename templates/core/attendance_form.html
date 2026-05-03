@@ -2,27 +2,28 @@
 {% load crispy_forms_tags %}
 
 {% block title %}Davomatni tahrirlash · Anvar Bog'cha{% endblock %}
+{% block app_title %}Davomatni tahrirlash{% endblock %}
 
 {% block content %}
-  <div class="d-flex align-items-center justify-content-between mb-3">
+  <div class="page-header">
     <div>
-      <h1 class="h4 mb-1">{{ page_title }}</h1>
-      <div class="small text-muted">{{ object.child }} · {{ object.attendance_date }}</div>
+      <div class="page-kicker">{{ object.child }} · {{ object.attendance_date }}</div>
+      <h1 class="page-title">{{ page_title }}</h1>
     </div>
-    <a class="btn btn-outline-secondary" href="{% url 'core:attendance_list' %}?date={{ object.attendance_date|date:'Y-m-d' }}">Back</a>
+    <a class="btn btn-outline-secondary" href="{% url 'core:attendance_list' %}?date={{ object.attendance_date|date:'Y-m-d' }}">
+      Orqaga
+    </a>
   </div>
 
   {% if form.non_field_errors %}
     <div class="alert alert-danger">{{ form.non_field_errors }}</div>
   {% endif %}
 
-  <div class="card">
-    <div class="card-body">
-      <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form|crispy }}
-        <button class="btn btn-primary" type="submit">Saqlash</button>
-      </form>
-    </div>
+  <div class="app-card p-3 p-lg-4">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button class="btn btn-primary" type="submit">Saqlash</button>
+    </form>
   </div>
 {% endblock %}

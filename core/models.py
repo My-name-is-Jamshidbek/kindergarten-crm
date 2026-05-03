@@ -5,6 +5,7 @@ import re
 from datetime import date
 
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -27,6 +28,62 @@ class Classroom(TimeStampedModel):
 
 	def __str__(self) -> str:
 		return self.name
+
+
+class KindergartenLocation(TimeStampedModel):
+	name = models.CharField(max_length=120, default="Anvar Bog'cha")
+	address = models.CharField(max_length=255, blank=True)
+	latitude = models.DecimalField(
+		max_digits=9,
+		decimal_places=6,
+		blank=True,
+		null=True,
+		validators=[MinValueValidator(-90), MaxValueValidator(90)],
+	)
+	longitude = models.DecimalField(
+		max_digits=9,
+		decimal_places=6,
+		blank=True,
+		null=True,
+		validators=[MinValueValidator(-180), MaxValueValidator(180)],
+	)
+
+	class Meta:
+		verbose_name = "Kindergarten location"
+		verbose_name_plural = "Kindergarten location"
+
+	def __str__(self) -> str:
+		return self.name
+
+	@classmethod
+	def get_solo(cls) -> "KindergartenLocation":
+		location, _created = cls.objects.get_or_create(pk=1)
+		return location
+
+	@property
+	def has_coordinates(self) -> bool:
+		return self.latitude is not None and self.longitude is not None
+
+	@property
+	def coordinates_display(self) -> str:
+		if not self.has_coordinates:
+			return ""
+		return f"{self.latitude}, {self.longitude}"
+
+	@property
+	def google_maps_url(self) -> str:
+		if not self.has_coordinates:
+			return ""
+		return f"https://www.google.com/maps/search/?api=1&query={self.latitude},{self.longitude}"
+
+	@property
+	def openstreetmap_embed_url(self) -> str:
+		if not self.has_coordinates:
+			return ""
+		lat = float(self.latitude)
+		lng = float(self.longitude)
+		bbox = f"{lng - 0.01:.6f}%2C{lat - 0.006:.6f}%2C{lng + 0.01:.6f}%2C{lat + 0.006:.6f}"
+		return f"https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik&marker={lat:.6f}%2C{lng:.6f}"
 
 
 class ChildStatus(models.TextChoices):

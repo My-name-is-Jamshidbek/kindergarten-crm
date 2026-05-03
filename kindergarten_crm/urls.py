@@ -20,10 +20,12 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
+from core.views import RoleAwareLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
+    path('accounts/login/', RoleAwareLoginView.as_view(), name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
 

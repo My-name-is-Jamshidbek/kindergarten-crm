@@ -1,19 +1,203 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Bosh sahifa · Anvar Bog'cha{% endblock %}
+{% block title %}Anvar Bog'cha CRM · Bosh sahifa{% endblock %}
 
 {% block content %}
-  <div class="p-4 p-md-5 mb-4 bg-body-tertiary rounded-3">
-    <div class="container-fluid py-2">
-      <h1 class="display-6">Xush kelibsiz</h1>
-      <p class="col-md-8 fs-5">
-        Guruhlar, bolalar va vasiylarni boshqaring.
-      </p>
-      {% if user.is_authenticated %}
-        <a class="btn btn-primary" href="{% url 'core:classroom_list' %}">Boshqaruvga o‘tish</a>
-      {% else %}
-        <a class="btn btn-primary" href="{% url 'login' %}">Kirish</a>
-      {% endif %}
+  <section class="landing-hero">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <span class="eyebrow">
+            <i data-lucide="sparkles"></i>
+            Bog'cha boshqaruvi uchun qulay CRM
+          </span>
+          <h1 class="landing-title">Har kun tartibli, rangli va nazoratda</h1>
+          <p class="landing-copy">
+            Davomat, bolalar ro'yxati, vasiylar, tariflar, oylik to'lovlar va bog'cha joylashuvini bitta sodda panelda boshqaring.
+          </p>
+          <div class="d-flex flex-wrap gap-2 mt-4">
+            {% if user.is_authenticated %}
+              <a class="btn btn-primary btn-lg" href="{{ current_role_default_url }}">
+                Dashboard
+              </a>
+            {% else %}
+              <a class="btn btn-primary btn-lg" href="{% url 'login' %}">
+                Kirish
+              </a>
+            {% endif %}
+            <a class="btn btn-outline-secondary btn-lg" href="#imkoniyatlar">Imkoniyatlar</a>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="hero-art">
+            <img src="{% static 'core/img/kindergarten-crm-hero.png' %}" alt="Bog'cha CRM boshqaruv paneli" />
+            <div class="floating-chip">
+              <i data-lucide="clipboard-check"></i>
+              Davomat tayyor
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section class="section-band" id="imkoniyatlar">
+    <div class="container">
+      <div class="row align-items-end mb-4 g-3">
+        <div class="col-lg-7">
+          <div class="page-kicker">Imkoniyatlar</div>
+          <h2 class="section-title">Bog'cha ishini yengillashtiradigan asosiy bo'limlar</h2>
+        </div>
+        <div class="col-lg-5 text-lg-end text-muted">
+          Xodimlar tez ko'radi, tez belgilaydi va har bir bolaga oid ma'lumotni tartibli saqlaydi.
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6 col-xl-4">
+          <div class="feature-card">
+            <span class="feature-icon"><i data-lucide="clipboard-check"></i></span>
+            <h3 class="h5 mt-3">Davomat</h3>
+            <p class="text-muted mb-0">Kunlik kelgan, kechikkan yoki kelmagan bolalarni tez belgilang.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="feature-card">
+            <span class="feature-icon"><i data-lucide="wallet-cards"></i></span>
+            <h3 class="h5 mt-3">To'lovlar</h3>
+            <p class="text-muted mb-0">Har oy uchun to'langan va to'lanmagan yozuvlarni nazorat qiling.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="feature-card">
+            <span class="feature-icon"><i data-lucide="users-round"></i></span>
+            <h3 class="h5 mt-3">Bolalar</h3>
+            <p class="text-muted mb-0">Bola, guruh, tarif va holat ma'lumotlarini bitta joyda saqlang.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="feature-card">
+            <span class="feature-icon"><i data-lucide="contact-round"></i></span>
+            <h3 class="h5 mt-3">Vasiylar</h3>
+            <p class="text-muted mb-0">Ota-ona yoki vasiy kontaktlarini bolaga bog'langan holda yuriting.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="feature-card">
+            <span class="feature-icon"><i data-lucide="badge-dollar-sign"></i></span>
+            <h3 class="h5 mt-3">Tariflar</h3>
+            <p class="text-muted mb-0">Standart, chegirmali va maxsus oylik tariflarni boshqaring.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-xl-4">
+          <div class="feature-card">
+            <span class="feature-icon"><i data-lucide="map-pin"></i></span>
+            <h3 class="h5 mt-3">Joylashuv</h3>
+            <p class="text-muted mb-0">Bog'cha GPS koordinatalarini saqlang va xaritada oching.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band pt-0" id="jarayon">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="workflow-step">
+            <span class="step-number">1</span>
+            <h3 class="h5 mt-3">Ertalab davomatni belgilang</h3>
+            <p class="text-muted mb-0">Guruh bo'yicha bolalarni ko'rib, holatni bir necha bosishda yangilang.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="workflow-step">
+            <span class="step-number">2</span>
+            <h3 class="h5 mt-3">Ma'lumotlarni tartiblang</h3>
+            <p class="text-muted mb-0">Guruhlar, bolalar, vasiylar va tariflar doim bir xil panelda bo'ladi.</p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="workflow-step">
+            <span class="step-number">3</span>
+            <h3 class="h5 mt-3">Oy yakunini nazorat qiling</h3>
+            <p class="text-muted mb-0">Oylik to'lovlar holatini ko'ring va to'lovlarni tez belgilang.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band pt-0">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="stat-card p-4">
+            <span class="stat-icon"><i data-lucide="school"></i></span>
+            <div class="display-6 fw-black fw-bold mt-3">3+</div>
+            <div class="text-muted">Demo guruhlar bilan tayyor ish muhiti</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card p-4">
+            <span class="stat-icon"><i data-lucide="baby"></i></span>
+            <div class="display-6 fw-black fw-bold mt-3">15+</div>
+            <div class="text-muted">Bolalar va vasiylar uchun tartibli yozuvlar</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="stat-card p-4">
+            <span class="stat-icon"><i data-lucide="calendar-check"></i></span>
+            <div class="display-6 fw-black fw-bold mt-3">1 oy</div>
+            <div class="text-muted">Davomat va to'lovlarni oylik kuzatish</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band pt-0">
+    <div class="container">
+      <div class="location-panel p-4 p-lg-5">
+        <div class="row align-items-center g-4">
+          <div class="{% if kindergarten_location.has_coordinates %}col-lg-5{% else %}col-lg-8{% endif %}">
+            <div class="page-kicker">Joylashuv</div>
+            <h2 class="h1 fw-bold mb-2">{{ kindergarten_location.name }}</h2>
+            {% if kindergarten_location.has_coordinates %}
+              {% if kindergarten_location.address %}
+                <p class="text-muted mb-1">{{ kindergarten_location.address }}</p>
+              {% else %}
+                <p class="text-muted mb-1">Bog'cha joylashuvi xaritada ko'rsatilgan.</p>
+              {% endif %}
+            {% else %}
+              <p class="text-muted mb-0">GPS joylashuv hali kiritilmagan. Tizimga kirgandan keyin joylashuv bo'limida saqlashingiz mumkin.</p>
+            {% endif %}
+          </div>
+          {% if kindergarten_location.has_coordinates %}
+            <div class="col-lg-7">
+              <iframe
+                class="landing-location-frame"
+                src="{{ kindergarten_location.openstreetmap_embed_url }}"
+                title="{{ kindergarten_location.name }} xaritasi"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+          {% endif %}
+          <div class="{% if kindergarten_location.has_coordinates %}col-12{% else %}col-lg-4 text-lg-end{% endif %}">
+            {% if kindergarten_location.has_coordinates %}
+              <a class="btn btn-primary btn-lg" href="{{ kindergarten_location.google_maps_url }}" target="_blank" rel="noopener">
+                Xaritada ochish
+              </a>
+            {% elif user.is_authenticated %}
+              <a class="btn btn-primary btn-lg" href="{{ current_role_default_url }}">Dashboard</a>
+            {% else %}
+              <a class="btn btn-primary btn-lg" href="{% url 'login' %}">Kirish</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 {% endblock %}

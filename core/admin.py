@@ -8,6 +8,7 @@ from .models import (
 	Child,
 	Classroom,
 	Guardian,
+	KindergartenLocation,
 	Tariff,
 	MonthlyBilling,
 )
@@ -25,6 +26,12 @@ class ClassroomAdmin(admin.ModelAdmin):
 	list_display = ("name", "age_group", "capacity", "created_at", "updated_at")
 	search_fields = ("name", "age_group")
 	list_filter = ("age_group",)
+
+
+@admin.register(KindergartenLocation)
+class KindergartenLocationAdmin(admin.ModelAdmin):
+	list_display = ("name", "address", "latitude", "longitude", "updated_at")
+	search_fields = ("name", "address")
 
 
 @admin.register(Child)

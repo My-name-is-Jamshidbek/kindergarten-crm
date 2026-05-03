@@ -1,72 +1,75 @@
 {% extends 'base.html' %}
 
 {% block title %}Vasiylar · Anvar Bog'cha{% endblock %}
+{% block app_title %}Vasiylar{% endblock %}
 
 {% block content %}
-  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">Vasiylar</h1>
-    <a class="btn btn-primary" href="{% url 'core:guardian_create' %}">Yangi vasiy</a>
+  <div class="page-header">
+    <div>
+      <div class="page-kicker">Aloqa ma'lumotlari</div>
+      <h1 class="page-title">Vasiylar</h1>
+    </div>
+    {% if current_role == 'admin' %}
+      <a class="btn btn-primary" href="{% url 'core:guardian_create' %}">
+        <i data-lucide="user-round-plus" class="me-1"></i>
+        Yangi vasiy
+      </a>
+    {% endif %}
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped align-middle">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Bola</th>
-          <th>Telefon</th>
-          <th>Email</th>
-          <th>Asosiy</th>
-          <th style="width: 180px;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for guardian in guardians %}
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
           <tr>
-            <td>{{ guardian.last_name }}, {{ guardian.first_name }}</td>
-            <td>{{ guardian.child }}</td>
-            <td>{{ guardian.phone }}</td>
-            <td>{{ guardian.email }}</td>
-            <td>
-              {% if guardian.is_primary %}
-                <span class="badge text-bg-primary">Ha</span>
-              {% else %}
-                <span class="badge text-bg-light">Yo‘q</span>
+            <th>Vasiy</th>
+            <th>Bola</th>
+            <th>Telefon</th>
+            <th>Email</th>
+            <th>Asosiy</th>
+            {% if current_role == 'admin' %}<th class="text-end">Amallar</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for guardian in guardians %}
+            <tr>
+              <td class="fw-semibold">{{ guardian.last_name }}, {{ guardian.first_name }}</td>
+              <td>{{ guardian.child }}</td>
+              <td>{{ guardian.phone }}</td>
+              <td>{{ guardian.email }}</td>
+              <td>
+                {% if guardian.is_primary %}
+                  <span class="badge text-bg-primary">Ha</span>
+                {% else %}
+                  <span class="badge text-bg-light">Yo'q</span>
+                {% endif %}
+              </td>
+              {% if current_role == 'admin' %}
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'core:guardian_update' guardian.pk %}">Tahrirlash</a>
+                  <a class="btn btn-sm btn-outline-danger" href="{% url 'core:guardian_delete' guardian.pk %}">O'chirish</a>
+                </td>
               {% endif %}
-            </td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:guardian_update' guardian.pk %}">Tahrirlash</a>
-              <a class="btn btn-sm btn-outline-danger" href="{% url 'core:guardian_delete' guardian.pk %}">O‘chirish</a>
-            </td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6" class="text-muted">Vasiylar topilmadi.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </tr>
+          {% empty %}
+            <tr><td colspan="{% if current_role == 'admin' %}6{% else %}5{% endif %}" class="empty-state">Vasiylar topilmadi.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   {% if is_paginated %}
-    <nav aria-label="Pagination">
+    <nav class="mt-3" aria-label="Sahifalash">
       <ul class="pagination">
         {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Oldingi</a>
-          </li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Oldingi</a></li>
         {% else %}
           <li class="page-item disabled"><span class="page-link">Oldingi</span></li>
         {% endif %}
-
-        <li class="page-item disabled">
-          <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-        </li>
-
+        <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
         {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Keyingi</a>
-          </li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Keyingi</a></li>
         {% else %}
           <li class="page-item disabled"><span class="page-link">Keyingi</span></li>
         {% endif %}

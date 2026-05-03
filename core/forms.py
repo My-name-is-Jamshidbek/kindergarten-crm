@@ -15,6 +15,7 @@ from .models import (
     Child,
     Classroom,
     Guardian,
+    KindergartenLocation,
     Tariff,
 )
 
@@ -23,6 +24,28 @@ class ClassroomForm(forms.ModelForm):
     class Meta:
         model = Classroom
         fields = ["name", "age_group", "capacity"]
+
+
+class KindergartenLocationForm(forms.ModelForm):
+    class Meta:
+        model = KindergartenLocation
+        fields = ["name", "address", "latitude", "longitude"]
+        labels = {
+            "name": "Nomi",
+            "address": "Manzil",
+        }
+        widgets = {
+            "latitude": forms.HiddenInput(),
+            "longitude": forms.HiddenInput(),
+        }
+
+    def clean(self) -> dict[str, Any]:
+        cleaned = super().clean()
+        latitude = cleaned.get("latitude")
+        longitude = cleaned.get("longitude")
+        if (latitude is None) != (longitude is None):
+            raise ValidationError("Latitude and longitude must be entered together.")
+        return cleaned
 
 
 class ChildForm(forms.ModelForm):

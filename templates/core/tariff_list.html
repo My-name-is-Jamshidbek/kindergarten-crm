@@ -1,88 +1,86 @@
 {% extends 'base.html' %}
 
 {% block title %}Tariflar · Anvar Bog'cha{% endblock %}
+{% block app_title %}Tariflar{% endblock %}
 
 {% block content %}
-  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">Tariflar</h1>
-    <a class="btn btn-primary" href="{% url 'core:tariff_create' %}">Yangi tarif</a>
+  <div class="page-header">
+    <div>
+      <div class="page-kicker">Oylik to'lov sozlamalari</div>
+      <h1 class="page-title">Tariflar</h1>
+    </div>
+    {% if current_role == 'admin' %}
+      <a class="btn btn-primary" href="{% url 'core:tariff_create' %}">
+        <i data-lucide="plus" class="me-1"></i>
+        Yangi tarif
+      </a>
+    {% endif %}
   </div>
 
-  <form class="row g-2 mb-3" method="get">
-    <div class="col-sm-8 col-md-6">
-      <input
-        class="form-control"
-        type="search"
-        name="q"
-        value="{{ q }}"
-        placeholder="Nom/tavsif bo‘yicha qidiring"
-        aria-label="Qidirish"
-      />
-    </div>
-    <div class="col-auto">
-      <button class="btn btn-outline-primary" type="submit">Qidirish</button>
-      <a class="btn btn-outline-secondary" href="{% url 'core:tariff_list' %}">Tozalash</a>
+  <form class="filter-panel" method="get">
+    <div class="row g-2 align-items-center">
+      <div class="col-md-7 col-lg-5">
+        <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Nom yoki tavsif bo'yicha qidiring" aria-label="Qidirish" />
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-primary" type="submit">Qidirish</button>
+        <a class="btn btn-outline-secondary" href="{% url 'core:tariff_list' %}">Tozalash</a>
+      </div>
     </div>
   </form>
 
-  <div class="table-responsive">
-    <table class="table table-striped align-middle">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th class="text-end">Amount</th>
-          <th>Faol</th>
-          <th style="width: 180px;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for tariff in tariffs %}
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
           <tr>
-            <td>
-              <div class="fw-semibold">{{ tariff.name }}</div>
-              {% if tariff.description %}<div class="small text-muted">{{ tariff.description }}</div>{% endif %}
-            </td>
-            <td class="text-end">{{ tariff.amount }}</td>
-            <td>
-              {% if tariff.is_active %}
-                <span class="badge text-bg-success">Faol</span>
-              {% else %}
-                <span class="badge text-bg-secondary">Nofaol</span>
+            <th>Nomi</th>
+            <th class="text-end">Summa</th>
+            <th>Holat</th>
+            {% if current_role == 'admin' %}<th class="text-end">Amallar</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for tariff in tariffs %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ tariff.name }}</div>
+                {% if tariff.description %}<div class="small text-muted">{{ tariff.description }}</div>{% endif %}
+              </td>
+              <td class="text-end">{{ tariff.amount }}</td>
+              <td>
+                {% if tariff.is_active %}
+                  <span class="badge text-bg-success">Faol</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">Nofaol</span>
+                {% endif %}
+              </td>
+              {% if current_role == 'admin' %}
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'core:tariff_update' tariff.pk %}">Tahrirlash</a>
+                  <a class="btn btn-sm btn-outline-danger" href="{% url 'core:tariff_delete' tariff.pk %}">O'chirish</a>
+                </td>
               {% endif %}
-            </td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:tariff_update' tariff.pk %}">Tahrirlash</a>
-              <a class="btn btn-sm btn-outline-danger" href="{% url 'core:tariff_delete' tariff.pk %}">O‘chirish</a>
-            </td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="4" class="text-muted">Tariflar topilmadi.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </tr>
+          {% empty %}
+            <tr><td colspan="{% if current_role == 'admin' %}4{% else %}3{% endif %}" class="empty-state">Tariflar topilmadi.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   {% if is_paginated %}
-    <nav aria-label="Pagination">
+    <nav class="mt-3" aria-label="Sahifalash">
       <ul class="pagination">
         {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Oldingi</a>
-          </li>
+          <li class="page-item"><a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Oldingi</a></li>
         {% else %}
           <li class="page-item disabled"><span class="page-link">Oldingi</span></li>
         {% endif %}
-
-        <li class="page-item disabled">
-          <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-        </li>
-
+        <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
         {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Keyingi</a>
-          </li>
+          <li class="page-item"><a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Keyingi</a></li>
         {% else %}
           <li class="page-item disabled"><span class="page-link">Keyingi</span></li>
         {% endif %}

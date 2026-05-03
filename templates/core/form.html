@@ -1,27 +1,29 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
+{% block title %}{{ page_title }} · Anvar Bog'cha{% endblock %}
+{% block app_title %}{{ page_title }}{% endblock %}
+
 {% block content %}
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">{{ page_title }}</h1>
+  <div class="page-header">
+    <div>
+      <div class="page-kicker">Ma'lumotlarni to'ldiring</div>
+      <h1 class="page-title">{{ page_title }}</h1>
+    </div>
   </div>
 
   {% if form.non_field_errors %}
-    <div class="alert alert-danger">
-      {{ form.non_field_errors }}
-    </div>
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
   {% endif %}
 
-  <div class="card">
-    <div class="card-body">
-      <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form|crispy }}
-        <div class="d-flex gap-2">
-          <button class="btn btn-primary" type="submit">Saqlash</button>
-          <a class="btn btn-outline-secondary" href="javascript:history.back()">Bekor qilish</a>
-        </div>
-      </form>
-    </div>
+  <div class="app-card p-3 p-lg-4">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form|crispy }}
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" type="submit">Saqlash</button>
+        <a class="btn btn-outline-secondary" href="javascript:history.back()">Bekor qilish</a>
+      </div>
+    </form>
   </div>
 {% endblock %}

@@ -1,80 +1,73 @@
 {% extends 'base.html' %}
 
 {% block title %}Guruhlar · Anvar Bog'cha{% endblock %}
+{% block app_title %}Guruhlar{% endblock %}
 
 {% block content %}
-  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
-    <h1 class="h4 mb-0">Guruhlar</h1>
-    <a class="btn btn-primary" href="{% url 'core:classroom_create' %}">Yangi guruh</a>
+  <div class="page-header">
+    <div>
+      <div class="page-kicker">O'quv xonalari</div>
+      <h1 class="page-title">Guruhlar</h1>
+    </div>
+    <a class="btn btn-primary" href="{% url 'core:classroom_create' %}">
+      <i data-lucide="plus" class="me-1"></i>
+      Yangi guruh
+    </a>
   </div>
 
-  <form class="row g-2 mb-3" method="get">
-    <div class="col-sm-8 col-md-6">
-      <input
-        class="form-control"
-        type="search"
-        name="q"
-        value="{{ q }}"
-        placeholder="Nom bo‘yicha qidiring"
-        aria-label="Qidirish"
-      />
-    </div>
-    <div class="col-auto">
-      <button class="btn btn-outline-primary" type="submit">Qidirish</button>
-      <a class="btn btn-outline-secondary" href="{% url 'core:classroom_list' %}">Tozalash</a>
+  <form class="filter-panel" method="get">
+    <div class="row g-2 align-items-center">
+      <div class="col-md-7 col-lg-5">
+        <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Guruh nomi bo'yicha qidiring" aria-label="Qidirish" />
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-primary" type="submit">Qidirish</button>
+        <a class="btn btn-outline-secondary" href="{% url 'core:classroom_list' %}">Tozalash</a>
+      </div>
     </div>
   </form>
 
-  <div class="table-responsive">
-    <table class="table table-striped align-middle">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Yosh guruhi</th>
-          <th class="text-end">Capacity</th>
-          <th style="width: 180px;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for classroom in classrooms %}
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
           <tr>
-            <td>{{ classroom.name }}</td>
-            <td>{{ classroom.age_group }}</td>
-            <td class="text-end">{{ classroom.capacity }}</td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:classroom_update' classroom.pk %}">Tahrirlash</a>
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'core:classroom_update' classroom.pk %}">Tahrirlash</a>
-              <a class="btn btn-sm btn-outline-danger" href="{% url 'core:classroom_delete' classroom.pk %}">O‘chirish</a>
-            </td>
+            <th>Nomi</th>
+            <th>Yosh guruhi</th>
+            <th class="text-end">Sig'imi</th>
+            <th class="text-end">Amallar</th>
           </tr>
-        {% empty %}
-          <tr>
-            <td colspan="4" class="text-muted">Guruhlar topilmadi.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for classroom in classrooms %}
+            <tr>
+              <td class="fw-semibold">{{ classroom.name }}</td>
+              <td>{{ classroom.age_group }}</td>
+              <td class="text-end">{{ classroom.capacity }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'core:classroom_update' classroom.pk %}">Tahrirlash</a>
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'core:classroom_delete' classroom.pk %}">O'chirish</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="empty-state">Guruhlar topilmadi.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   {% if is_paginated %}
-    <nav aria-label="Pagination">
+    <nav class="mt-3" aria-label="Sahifalash">
       <ul class="pagination">
         {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Oldingi</a>
-          </li>
+          <li class="page-item"><a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.previous_page_number }}">Oldingi</a></li>
         {% else %}
           <li class="page-item disabled"><span class="page-link">Oldingi</span></li>
         {% endif %}
-
-        <li class="page-item disabled">
-          <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-        </li>
-
+        <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
         {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Keyingi</a>
-          </li>
+          <li class="page-item"><a class="page-link" href="?q={{ q|urlencode }}&page={{ page_obj.next_page_number }}">Keyingi</a></li>
         {% else %}
           <li class="page-item disabled"><span class="page-link">Keyingi</span></li>
         {% endif %}

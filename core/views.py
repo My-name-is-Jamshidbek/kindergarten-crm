@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
 from django.db.models import QuerySet
@@ -18,7 +20,7 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
-from .forms import AttendanceForm, ChildForm, ClassroomForm, GuardianForm, TariffForm, SearchQuery, child_search_filter, classroom_search_filter
+from .forms import AttendanceForm, ChildForm, ClassroomForm, GuardianForm, KindergartenLocationForm, TariffForm, SearchQuery, child_search_filter, classroom_search_filter
 from .models import (
 	Attendance,
 	AttendanceStatus,
@@ -26,10 +28,13 @@ from .models import (
 	ChildStatus,
 	Classroom,
 	Guardian,
+	KindergartenLocation,
 	Tariff,
 	MonthlyBilling,
 	MonthlyBillingStatus,
 )
+from .roles import ROLE_ACCOUNTANT, ROLE_ADMIN, ROLE_EDUCATOR, RoleRequiredMixin, SuperuserRequiredMixin
+from .roles import default_url_for_user, primary_role
 
 
 class PageTitleMixin:
@@ -52,8 +57,81 @@ class PageTitleMixin:
 class HomeView(TemplateView):
 	template_name = "core/home.html"
 
+	def get_context_data(self, **kwargs: object) -> dict[str, object]:
+		ctx = super().get_context_data(**kwargs)
+		ctx["kindergarten_location"] = KindergartenLocation.get_solo()
+		return ctx
 
-class ClassroomListView(LoginRequiredMixin, ListView):
+
+class RoleAwareLoginView(LoginView):
+	template_name = "registration/login.html"
+
+	def get_success_url(self) -> str:
+		redirect_to = self.get_redirect_url()
+		if redirect_to:
+			return redirect_to
+		return reverse(default_url_for_user(self.request.user))
+
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+	template_name = "core/dashboard.html"
+
+	def _attendance_stats(self) -> dict[str, int]:
+		today = timezone.localdate()
+		qs = Attendance.objects.filter(attendance_date=today)
+		return {
+			"present": qs.filter(status=AttendanceStatus.PRESENT).count(),
+			"late": qs.filter(status=AttendanceStatus.LATE).count(),
+			"absent": qs.filter(status=AttendanceStatus.ABSENT).count(),
+			"expected": qs.filter(status=AttendanceStatus.EXPECTED).count(),
+		}
+
+	def _billing_stats(self) -> dict[str, int | Decimal | str]:
+		month = timezone.localdate().strftime("%Y-%m")
+		qs = MonthlyBilling.objects.filter(billing_month=month)
+		return {
+			"month": month,
+			"paid": qs.filter(status=MonthlyBillingStatus.PAID).count(),
+			"unpaid": qs.filter(status=MonthlyBillingStatus.UNPAID).count(),
+			"paid_amount": qs.filter(status=MonthlyBillingStatus.PAID).aggregate(total=models.Sum("amount"))["total"] or Decimal("0"),
+			"unpaid_amount": qs.filter(status=MonthlyBillingStatus.UNPAID).aggregate(total=models.Sum("amount"))["total"] or Decimal("0"),
+		}
+
+	def get_context_data(self, **kwargs: object) -> dict[str, object]:
+		ctx = super().get_context_data(**kwargs)
+		role = primary_role(self.request.user)
+		if not role:
+			raise PermissionDenied("Rol biriktirilmagan.")
+		ctx["page_title"] = "Dashboard"
+		ctx["dashboard_role"] = role
+		ctx["attendance_stats"] = self._attendance_stats()
+		ctx["billing_stats"] = self._billing_stats()
+		ctx["classroom_count"] = Classroom.objects.count()
+		ctx["active_child_count"] = Child.objects.filter(status=ChildStatus.ACTIVE).count()
+		ctx["guardian_count"] = Guardian.objects.count()
+		ctx["tariff_count"] = Tariff.objects.count()
+		ctx["location"] = KindergartenLocation.get_solo()
+		return ctx
+
+
+class KindergartenLocationUpdateView(LoginRequiredMixin, SuperuserRequiredMixin, PageTitleMixin, UpdateView):
+	model = KindergartenLocation
+	form_class = KindergartenLocationForm
+	template_name = "core/kindergarten_location_form.html"
+	success_url = reverse_lazy("core:kindergarten_location")
+	page_title = "Bog'cha GPS joylashuvi"
+
+	def get_object(self, queryset: QuerySet[KindergartenLocation] | None = None) -> KindergartenLocation:
+		return KindergartenLocation.get_solo()
+
+	def form_valid(self, form: KindergartenLocationForm) -> HttpResponse:
+		response = super().form_valid(form)
+		messages.success(self.request, "Bog'cha GPS joylashuvi saqlandi.")
+		return response
+
+
+class ClassroomListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Classroom
 	template_name = "core/classroom_list.html"
 	context_object_name = "classrooms"
@@ -72,7 +150,8 @@ class ClassroomListView(LoginRequiredMixin, ListView):
 		return ctx
 
 
-class ClassroomCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
+class ClassroomCreateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, CreateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Classroom
 	form_class = ClassroomForm
 	template_name = "core/form.html"
@@ -85,7 +164,8 @@ class ClassroomCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 		return response
 
 
-class ClassroomUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
+class ClassroomUpdateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, UpdateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Classroom
 	form_class = ClassroomForm
 	template_name = "core/form.html"
@@ -98,7 +178,8 @@ class ClassroomUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 		return response
 
 
-class ClassroomDeleteView(LoginRequiredMixin, DeleteView):
+class ClassroomDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Classroom
 	template_name = "core/confirm_delete.html"
 	success_url = reverse_lazy("core:classroom_list")
@@ -108,7 +189,8 @@ class ClassroomDeleteView(LoginRequiredMixin, DeleteView):
 		return super().form_valid(form)
 
 
-class ChildListView(LoginRequiredMixin, ListView):
+class ChildListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Child
 	template_name = "core/child_list.html"
 	context_object_name = "children"
@@ -127,7 +209,8 @@ class ChildListView(LoginRequiredMixin, ListView):
 		return ctx
 
 
-class ChildCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
+class ChildCreateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, CreateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Child
 	form_class = ChildForm
 	template_name = "core/form.html"
@@ -140,7 +223,8 @@ class ChildCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 		return response
 
 
-class ChildUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
+class ChildUpdateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, UpdateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Child
 	form_class = ChildForm
 	template_name = "core/form.html"
@@ -153,7 +237,8 @@ class ChildUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 		return response
 
 
-class ChildDeleteView(LoginRequiredMixin, DeleteView):
+class ChildDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Child
 	template_name = "core/confirm_delete.html"
 	success_url = reverse_lazy("core:child_list")
@@ -163,7 +248,8 @@ class ChildDeleteView(LoginRequiredMixin, DeleteView):
 		return super().form_valid(form)
 
 
-class GuardianListView(LoginRequiredMixin, ListView):
+class GuardianListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+	allowed_roles = (ROLE_ADMIN, ROLE_EDUCATOR)
 	model = Guardian
 	template_name = "core/guardian_list.html"
 	context_object_name = "guardians"
@@ -175,7 +261,8 @@ class GuardianListView(LoginRequiredMixin, ListView):
 		)
 
 
-class GuardianCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
+class GuardianCreateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, CreateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Guardian
 	form_class = GuardianForm
 	template_name = "core/form.html"
@@ -188,7 +275,8 @@ class GuardianCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 		return response
 
 
-class GuardianUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
+class GuardianUpdateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, UpdateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Guardian
 	form_class = GuardianForm
 	template_name = "core/form.html"
@@ -201,7 +289,8 @@ class GuardianUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 		return response
 
 
-class GuardianDeleteView(LoginRequiredMixin, DeleteView):
+class GuardianDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Guardian
 	template_name = "core/confirm_delete.html"
 	success_url = reverse_lazy("core:guardian_list")
@@ -211,7 +300,8 @@ class GuardianDeleteView(LoginRequiredMixin, DeleteView):
 		return super().form_valid(form)
 
 
-class TariffListView(LoginRequiredMixin, ListView):
+class TariffListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+	allowed_roles = (ROLE_ADMIN, ROLE_ACCOUNTANT)
 	model = Tariff
 	template_name = "core/tariff_list.html"
 	context_object_name = "tariffs"
@@ -230,7 +320,8 @@ class TariffListView(LoginRequiredMixin, ListView):
 		return ctx
 
 
-class TariffCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
+class TariffCreateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, CreateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Tariff
 	form_class = TariffForm
 	template_name = "core/form.html"
@@ -243,7 +334,8 @@ class TariffCreateView(LoginRequiredMixin, PageTitleMixin, CreateView):
 		return response
 
 
-class TariffUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
+class TariffUpdateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, UpdateView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Tariff
 	form_class = TariffForm
 	template_name = "core/form.html"
@@ -256,7 +348,8 @@ class TariffUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 		return response
 
 
-class TariffDeleteView(LoginRequiredMixin, DeleteView):
+class TariffDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+	allowed_roles = (ROLE_ADMIN,)
 	model = Tariff
 	template_name = "core/confirm_delete.html"
 	success_url = reverse_lazy("core:tariff_list")
@@ -275,7 +368,8 @@ def _parse_date(value: str | None) -> date:
 		return timezone.localdate()
 
 
-class AttendanceListView(LoginRequiredMixin, ListView):
+class AttendanceListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+	allowed_roles = (ROLE_ADMIN, ROLE_EDUCATOR)
 	model = Attendance
 	template_name = "core/attendance_list.html"
 	context_object_name = "attendances"
@@ -336,7 +430,8 @@ class AttendanceListView(LoginRequiredMixin, ListView):
 		return ctx
 
 
-class AttendanceUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
+class AttendanceUpdateView(LoginRequiredMixin, RoleRequiredMixin, PageTitleMixin, UpdateView):
+	allowed_roles = (ROLE_ADMIN, ROLE_EDUCATOR)
 	model = Attendance
 	form_class = AttendanceForm
 	template_name = "core/attendance_form.html"
@@ -352,7 +447,8 @@ class AttendanceUpdateView(LoginRequiredMixin, PageTitleMixin, UpdateView):
 		return response
 
 
-class AttendanceQuickMarkView(LoginRequiredMixin, View):
+class AttendanceQuickMarkView(LoginRequiredMixin, RoleRequiredMixin, View):
+	allowed_roles = (ROLE_ADMIN, ROLE_EDUCATOR)
 	allowed = {
 		AttendanceStatus.PRESENT,
 		AttendanceStatus.ABSENT,
@@ -378,7 +474,8 @@ class AttendanceQuickMarkView(LoginRequiredMixin, View):
 		return HttpResponseRedirect(return_url)
 
 
-class AttendanceSetTimeView(LoginRequiredMixin, View):
+class AttendanceSetTimeView(LoginRequiredMixin, RoleRequiredMixin, View):
+	allowed_roles = (ROLE_ADMIN, ROLE_EDUCATOR)
 	def post(self, request: HttpRequest, pk: int, field: str) -> HttpResponse:
 		if field not in {"check_in_time", "check_out_time"}:
 			return HttpResponseBadRequest("Noto‘g‘ri maydon")
@@ -399,7 +496,8 @@ class AttendanceSetTimeView(LoginRequiredMixin, View):
 		return HttpResponseRedirect(return_url)
 
 
-class AttendanceBulkMarkPresentView(LoginRequiredMixin, View):
+class AttendanceBulkMarkPresentView(LoginRequiredMixin, RoleRequiredMixin, View):
+	allowed_roles = (ROLE_ADMIN, ROLE_EDUCATOR)
 	def post(self, request: HttpRequest) -> HttpResponse:
 		date_val = _parse_date(request.POST.get("date"))
 		classroom_id = (request.POST.get("classroom") or "").strip()
@@ -449,7 +547,8 @@ def _parse_billing_month(value: str | None) -> str:
 	return val
 
 
-class MonthlyBillingListView(LoginRequiredMixin, ListView):
+class MonthlyBillingListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+	allowed_roles = (ROLE_ADMIN, ROLE_ACCOUNTANT)
 	model = MonthlyBilling
 	template_name = "core/billing_monthly_list.html"
 	context_object_name = "rows"
@@ -514,7 +613,8 @@ class MonthlyBillingListView(LoginRequiredMixin, ListView):
 		return ctx
 
 
-class MonthlyBillingMarkView(LoginRequiredMixin, View):
+class MonthlyBillingMarkView(LoginRequiredMixin, RoleRequiredMixin, View):
+	allowed_roles = (ROLE_ADMIN, ROLE_ACCOUNTANT)
 	def post(self, request: HttpRequest, status: str) -> HttpResponse:
 		if status not in {MonthlyBillingStatus.PAID, MonthlyBillingStatus.UNPAID}:
 			return HttpResponseBadRequest("Noto‘g‘ri holat")
