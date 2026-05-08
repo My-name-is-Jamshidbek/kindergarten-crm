@@ -296,4 +296,121 @@ class RoleAccessTests(TestCase):
 				self.assertContains(resp, expected_text)
 				self.client.logout()
 
+
+class ApiTests(TestCase):
+	def test_educator_login_returns_token_and_role(self) -> None:
+		password = "testpass123"
+		user = create_role_user("apieducator", ROLE_EDUCATOR, password=password)
+
+		resp = self.client.post(
+			"/api/auth/login/",
+			{"username": user.username, "password": password},
+			content_type="application/json",
+		)
+
+		self.assertEqual(resp.status_code, 200)
+		data = resp.json()
+		self.assertIn("token", data)
+		self.assertEqual(data["user"]["role"], ROLE_EDUCATOR)
+
+	def test_non_educator_cannot_login_to_mobile_api(self) -> None:
+		password = "testpass123"
+		user = create_role_user("apiaccountant", ROLE_ACCOUNTANT, password=password)
+
+		resp = self.client.post(
+			"/api/auth/login/",
+			{"username": user.username, "password": password},
+			content_type="application/json",
+		)
+
+		self.assertEqual(resp.status_code, 403)
+
+	def test_attendance_api_autocreates_rows_for_educator(self) -> None:
+		password = "testpass123"
+		user = create_role_user("apiattuser", ROLE_EDUCATOR, password=password)
+		classroom = Classroom.objects.create(name="API Stars", age_group="5-6", capacity=10)
+		child = Child.objects.create(
+			first_name="Ava",
+			last_name="Davis",
+			birth_date=date(2020, 1, 1),
+			classroom=classroom,
+			status=ChildStatus.ACTIVE,
+		)
+		login = self.client.post(
+			"/api/auth/login/",
+			{"username": user.username, "password": password},
+			content_type="application/json",
+		)
+		token = login.json()["token"]
+
+		resp = self.client.get("/api/attendance/", HTTP_AUTHORIZATION=f"Token {token}")
+
+		self.assertEqual(resp.status_code, 200)
+		self.assertTrue(Attendance.objects.filter(child=child).exists())
+		self.assertEqual(resp.json()["results"][0]["child"]["full_name"], "Ava Davis")
+
+	def test_attendance_api_can_update_details_for_educator(self) -> None:
+		password = "testpass123"
+		user = create_role_user("apiupdateuser", ROLE_EDUCATOR, password=password)
+		classroom = Classroom.objects.create(name="API Update", age_group="5-6", capacity=10)
+		child = Child.objects.create(
+			first_name="Mia",
+			last_name="Stone",
+			birth_date=date(2020, 1, 1),
+			classroom=classroom,
+			status=ChildStatus.ACTIVE,
+		)
+		row = Attendance.objects.create(child=child, attendance_date=date(2026, 5, 8))
+		token = self.client.post(
+			"/api/auth/login/",
+			{"username": user.username, "password": password},
+			content_type="application/json",
+		).json()["token"]
+
+		resp = self.client.patch(
+			f"/api/attendance/{row.pk}/",
+			{
+				"status": AttendanceStatus.LATE,
+				"check_in_time": "09:15",
+				"check_out_time": "15:30",
+				"notes": "Traffic",
+			},
+			content_type="application/json",
+			HTTP_AUTHORIZATION=f"Token {token}",
+		)
+
+		self.assertEqual(resp.status_code, 200)
+		row.refresh_from_db()
+		self.assertEqual(row.status, AttendanceStatus.LATE)
+		self.assertEqual(row.check_in_time.strftime("%H:%M"), "09:15")
+		self.assertEqual(row.check_out_time.strftime("%H:%M"), "15:30")
+
+	def test_attendance_api_bulk_marks_classroom_present(self) -> None:
+		password = "testpass123"
+		user = create_role_user("apibulkuser", ROLE_EDUCATOR, password=password)
+		classroom = Classroom.objects.create(name="API Bulk", age_group="5-6", capacity=10)
+		child = Child.objects.create(
+			first_name="Noah",
+			last_name="Brown",
+			birth_date=date(2020, 1, 1),
+			classroom=classroom,
+			status=ChildStatus.ACTIVE,
+		)
+		token = self.client.post(
+			"/api/auth/login/",
+			{"username": user.username, "password": password},
+			content_type="application/json",
+		).json()["token"]
+
+		resp = self.client.post(
+			"/api/attendance/bulk/mark-present/",
+			{"date": "2026-05-08", "classroom": str(classroom.pk)},
+			content_type="application/json",
+			HTTP_AUTHORIZATION=f"Token {token}",
+		)
+
+		self.assertEqual(resp.status_code, 200)
+		row = Attendance.objects.get(child=child, attendance_date=date(2026, 5, 8))
+		self.assertEqual(row.status, AttendanceStatus.PRESENT)
+
 # Create your tests here.
